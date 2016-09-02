@@ -1,0 +1,16 @@
+//Chapter 1
+//In C++ an expression yields a result and is composed of one or more operands and (usually) an operator.
+//The << operator takes two operands: The left-hand operand must be an ostream object; the right-hand operand is a value to print. 
+//"endl" is a special value called a manipulator. Writing "endl" has the effect of ending the current line and flush the buffer associated with that device.
+
+std::endl;
+//the prefix std:: indicates that the names "endl" is defined inside the namespace named std.
+//All the names defined by the standard library are in the std namespace.
+//Writing std::cout uses the scope operator (the :: operator) to say that we want to use the name cout that is defined in the namespace std.
+
+//When we initialize a variable, we give it the indicated value at the same time as the variable is created.
+
+//end-of-file: ctrl-d
+
+//the "." dot operator applies only to objects of class type. The left-hand operand must be an object of class type, and the right-hand operand must name a member of that ty pe. The result of the dot operator is the member named by the right-hand operand.
+
