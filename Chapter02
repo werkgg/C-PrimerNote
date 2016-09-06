@@ -1,6 +1,8 @@
-//Chapter02
+//Chapter02 Variables and Basic Types
 
-//2.1
+//2.1 Primitive Build-in Types
+
+//2.1.1 Arithmetic Types
 
 //Types determine the meaning of the data and operations in our programs.
 //C++ defines a set of primitive types that include the arithmetic types and a special type named void.
@@ -11,12 +13,14 @@
 //char is signed on some machines and unsigned on others.
 //use double for floating-point computations; float usually does not have enough precision, and the cost of double-precision calculations versus single-precision is negligible.
 
+//2.1.2 Type Conversions
+
 //If we assign an out-of-range value to an object of unsigned type, the result is the remainder of the value modulo the number of values the target type can hold.
 //If we assign an out-of-range value to an object of signed type, the result is undefined.
 
 //If we use both unsigned and int values in an arithmetic expression, the int value ordinarily is converted to unsigned.
 
-//2.1.2 Literals
+//2.1.3 Literals
 //Integer literals that begin with 0(zero) are interpreted as octal. Those that begin with either 0x or 0X are interpreted as hexadecimal.
 //Although integer literals may be stored in signed types, technically speaking, the value of a decimal literal is never a negative number. The minus sign is not part of the literal. The minus sign is an operator that negates the value of its literal operand.
 
@@ -24,6 +28,12 @@
 //Zero or more characters enclosed in double quotation marks is a string literal.
 //The type of a string literal is array of contant chars. The compiler appends a null character ('\0') to every string literal. Thus, the actual size of a string literal is one more than its apparent size.
 
+//We can write a generalized escape sequence, which is \x followed by one or more hexadecimal digits or a \ followed by one, two, or three octal digits.
+//Note that if a \ is followed by more than three octal digits, only the first three are associated with the \.
+
+//2.2 Variables
+
+//2.2.1 Variable Definitions
 
 
 
