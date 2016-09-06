@@ -16,3 +16,14 @@
 
 //If we use both unsigned and int values in an arithmetic expression, the int value ordinarily is converted to unsigned.
 
+//2.1.2 Literals
+//Integer literals that begin with 0(zero) are interpreted as octal. Those that begin with either 0x or 0X are interpreted as hexadecimal.
+//Although integer literals may be stored in signed types, technically speaking, the value of a decimal literal is never a negative number. The minus sign is not part of the literal. The minus sign is an operator that negates the value of its literal operand.
+
+//A character enclosed within single quotes is a literal of type char.
+//Zero or more characters enclosed in double quotation marks is a string literal.
+//The type of a string literal is array of contant chars. The compiler appends a null character ('\0') to every string literal. Thus, the actual size of a string literal is one more than its apparent size.
+
+
+
+
