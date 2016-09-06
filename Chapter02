@@ -35,5 +35,39 @@
 
 //2.2.1 Variable Definitions
 
+//A simple variable definition consists of a type specifier, followed by a list of one or more variable names separated by commas, and ends with a semicolon.
+//A definition may (optionally) provide an initial value for one or more of the names it defines.
+
+//"string" is a library type, representing a variable-length sequence of characters.
+
+//An "object" is a region of memory that can obtain data and has a type.
+
+//An object that is initialized gets the specific value at the moment it is created. The values used to initilize a variable can be arbitrarily complicated expressions.
+
+//Initialization and assignment are different operations in C++!
+//Initialization is not assignment. Initialization happens when a variable is given a value when it is created. Assignment obliterates an object's current value and replaces that value with a new one.
+
+//list initialization
+
+//One way in which initialization is a complicated topic is that the language defines several different forms of initilization.
+//For example, we can use any of the following four different ways to define an int variable named units_sold and initialize it to 0:
+int units_sold = 0;
+int units_sold = {0};    //list initialization
+int units_sold{0};
+int units_sold(0);
+
+//When used with variables of built-in types, this form of initialization has one important property: The compiler will not let us list initialize variables of built-in type if the initializer might lead to the loss of information:
+long double ld=3.1415926536;
+int a{ld}, b={ld};    //error: narrowing conversion required
+int c(ld), d=ld;    //ok, but value will be truncated.
+
+//default initialization
+//When we define a variable without an initializer, the variable is default initialized. Such variables are given the "default" value. What that default value is depends on the type of the variable and may also depends on where the variable is defined.
+
+//The value of an object of built-in type that is not explicitly initialized depends on where it is defined. Variables defined outside any function body are initialized to zero. Uninitialized objects of built-in type defined inside a function body have undefined value.
+//Objects of class type that we do not explicitly initialize have a value that is defined by the class.
+
+//2.2.2 Variable Declarations and Definitions
+
 
 
