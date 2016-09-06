@@ -1,4 +1,7 @@
 //Chapter02
+
+//2.1
+
 //Types determine the meaning of the data and operations in our programs.
 //C++ defines a set of primitive types that include the arithmetic types and a special type named void.
 //The arithmetic types represent characters, intergers, boolean values, and floating-point numbers.
@@ -7,4 +10,9 @@
 //Although threre are three character types, there are only two representations: signed and unsigned. The (Plain) char type uses one of these representations. Which of the other two character representations is equivalent to char depends on the compiler.
 //char is signed on some machines and unsigned on others.
 //use double for floating-point computations; float usually does not have enough precision, and the cost of double-precision calculations versus single-precision is negligible.
+
+//If we assign an out-of-range value to an object of unsigned type, the result is the remainder of the value modulo the number of values the target type can hold.
+//If we assign an out-of-range value to an object of signed type, the result is undefined.
+
+//If we use both unsigned and int values in an arithmetic expression, the int value ordinarily is converted to unsigned.
 
