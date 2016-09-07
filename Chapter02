@@ -151,5 +151,8 @@ void*  //
 //There are only a limited number of things we can do with a void* pointer: we can compare it to another pointer, we can pass it to or return it from a function, and we can assign it to another void* pointer.
 //We cannot use a void* to operator on the object it addresses, as we don't know that object's type, and the type determines what operations we can perform on th
 
+//Generally, we use a void* pointer to deal with memory as memory, rather than using the pointer to access the object stored in that memory.
+
+
 
 
