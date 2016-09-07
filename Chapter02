@@ -96,5 +96,60 @@ int j;    //declares and defines j
 
 //2.2.4 Scope of a Name
 
+//A scope is a part of the program in which a name has a particular meaning. Most scopes in C++ are delimited by curly braces.
+//The same name can refer to different entities in different scope.
+//Names are visible from the point where they are declared until the end of the scope in which the declaration appears.
+
+//When the scope operator has an empty left-hand side, it is a request to fetch the name on the right-hand side from the global scope.
+
+//2.3 Compound Types
+
+//A compound type is a type that is defined in terms of another type.
+//More generally, a declaration is a base type followed by a list of declarators. Each declarator names a variable and gives the variable a type that is related to the base type.
+
+//2.3.1
+//A reference defines an alternative name for an object. A reference type "refers to" another type.
+//Ordinarily, when we initialize the variable, the value of the initializer is copied into the object we are creating. When we define a reference, instread of copying the initializer's value, we BIND the reference to its initializer. Once initialized, a reference remains bound to its initial object.
+//There is no way to rebind a reference to refer to a different object. Because there is no way to rebind a reference. references must be initialized.
+
+//A reference is not an object. Instread, a reference is just another name for an already existing object.
+
+//After a reference has been defined, all operations on that reference are actually operations on the object to which the reference is bound.
+
+//Because references are not objects, we may not define a reference to a reference.
+
+//2.3.2 Pointers
+
+//A pointer is a compund type that "points to" another type.
+//Like references, pointers are used for indirect access to other objects. Unlike a reference, a pointer is an object in its own right. Pointers can be assigned and copied; a single pointer can point to several different objects over its lifetime. Unlike a reference, a pointer need not be initialized at the time it is defined. Like other built-in types, pointers defined at block scope have undefined value if they are not initialized.
+
+//We get the address of an object by using the address-of operator (the & operator).
+//Because references are not objects, they don't have addresses. Hence, we may not define a pointer to a reference.
+
+//The value (the address) stored in a pointer can be in one of four states:
+//1. it can point to an object.
+//2. it can point to the location just immediately past the end of an object.
+//3. it can be a null pointer, indicating that it is not bound to any object.
+//4. it can be invalid; values other than the preceding three are invalid.
+
+//When a pointer points to an object, we can use the dererence operator ( the * operator) to access that object.
+//Derefencing a pointer yields the object to which the pointer points.
+
+//In declarations, & and * are used to form compound types. In expressions, these same symbols are used to denote an operator.
+
+//A null pointer does not point to any object. There are several ways to obtain a null pointer:
+int *p = nullptr;
+int *p = 0;
+int *p = NULL;    //must #include cstdlib
+
+//The preprocessor is a program that runs before the compiler. Preprocessor variables are managed by the preprocessor, and are not part of the std namespace.
+
+//The type void* is a special pointer type that can hold the address of any object.
+//A void* pointer holds an address, but the type of the object at that address is unknown.
+void*  //
+
+//There are only a limited number of things we can do with a void* pointer: we can compare it to another pointer, we can pass it to or return it from a function, and we can assign it to another void* pointer.
+//We cannot use a void* to operator on the object it addresses, as we don't know that object's type, and the type determines what operations we can perform on th
+
 
 
