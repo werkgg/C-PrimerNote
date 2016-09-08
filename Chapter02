@@ -208,6 +208,47 @@ extern const int bufferSize;  //same bufSize as defined in file_1.cc
 //We noted that there are two exceptions to the rule that the type of a reference must match the type of the object to which it refers.
 //The first exception is that we can initialize a reference to const from any expression that can be converted to the type of the reference.
 
+//he easiest way to understand this difference in initialization rules is to consider what happens when we bind a reference to an object of a different type:
+double dval = 3.14;
+const int &ri = dval;
+//Here ri refers to an int. Operations on ri will be integer operations, but dval is a floating-point number, not an integer. To ensure that the object to which ri is bound is an int, the compiler transforms this code into something like
+const int temp = dval;   // create a temporary const int from the double
+const int &ri = temp;    // bind ri to that temporary
+//In this case, ri is bound to a temporary object. A temporary object is an unnamed object created by the compiler when it needs a place to store a result from evaluating an expression. C++ programmers often use the word temporary as an abbreviation for temporary object.
+
+//It is important to realize that a reference to const restricts only what we can do through that reference. Binding a reference to const to an object says nothing about whether the underlying object itself is const. Because the underlying object might be nonconst, it might be changed by other means.
+
+//2.4.2 Pointers and const
+//As with references, we can define pointers that point to either const or nonconst types. Like a reference to const, a pointer to const may not be used to change the object to which the pointer points.
+//We may store the address of a const object only in a pointer to const.
+
+//We can use a pointer to const to point to a nonconst object.
+
+//Like a reference to const, a pointer to const says nothing about whether the object to which the pointer points is const. Defining a pointer as a pointer to const affects only what we can do with the pointer. It is important to remember that there is no guarantee that an object pointed to by a pointer to const won’t change.
+
+//const pointers
+//Unlike references, pointers are objects. Hence, as with any other object type, we can have a pointer that is itself const. Like any other const object, a const pointer must be initialized, and once initialized, its value (i.e., the address that it holds) may not be changed. We indicate that the pointer is const by putting the const after the *. This placement indicates that it is the pointer, not the pointed-to type, that is const.
+
+const double pi=3.14;
+const double *const pip = &pi;
+
+int errNum=0;
+int *const curErr=&errNumb;
+//the easiest way to understand these declarations is to read them from right to left. In this case, the symbol closest to curErr is const, which means that curErr itself will be a const object. The type of that object is formed from the rest of the declarator. The next symbol in the declarator is *, which means that curErr is a const pointer. Finally, the base type of the declaration completes the type of curErr, which is a const pointer to an object of type int. Similarly, pip is a const pointer to an object of type const double.
+
+//2.4.3 Top-level const
+//We use the term top-level const to indicate that the pointer itself is a const. When a pointer can point to a const object, we refer to that const as a low-level const.
+
+//More generally, top-level const indicates that an object itself is const. Top-level const can appear in any object type, i.e., one of the built-in arithmetic types, a class type, or a pointer type. Low-level const appears in the base type of compound types such as pointers or references. Note that pointer types, unlike most other types, can have both top-level and low-level const independently.
+
+//The distinction between top-level and low-level matters when we copy an object. When we copy an object, top-level consts are ignored.
+
+//On the other hand, low-level const is never ignored. When we copy an object, both objects must have the same low-level const qualification or there must be a conversion between the types of the two objects. In general, we can convert a nonconst to const but not the other way round.
+
+
+
+
+
 
 
 
