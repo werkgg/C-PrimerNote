@@ -178,6 +178,36 @@ r=&i;         //r refers to a pointer; assigning &i to r makes p point to i
 
 //2.4 const Qualifier
 
+//We can make a variable unchangeable by defining the variable's type as "const".
+//This is to define a variable value as constant. Any attempt to assign another value is an error.
+
+//Because we can't change the value of a const object after we create it, it must be initialized. As usual, the initializer may be an arbitrarily complicated expression.
+
+const int bufSize=512;
+//The compiler will generate code using the value of 512 in the places that our code uses bufSize.
+
+//By default, const objects are local to a file.
+
+//Sometimes, we want the const object to behave like other (nonconst) variables. We want to define the const in one file, and declare it in the other files that use that object.
+//To define a single instance of a const variable, we use the keyword extern on both its definition and declaration(s).
+//file_1.cc defines and initializes a const that is accessible to other files
+extern const int bufSize=fcn();  //this is a definition
+//file_1.h
+extern const int bufferSize;  //same bufSize as defined in file_1.cc
+
+//To share a const object among multiple files, you must define the variable as extern.
+
+//2.4.1 References to const
+
+//As with any other object, we can bind a reference to an object of a const type. To do so we use a reference to const, which is a reference that refers to a const type.
+//Unlike an ordinary reference, a reference to const cannot be used to change the object to which the reference is bound.
+
+//const reference is a reference to const.
+//C++ programmers tend to abbreviate the phrase "reference to const" as "const reference".
+
+//We noted that there are two exceptions to the rule that the type of a reference must match the type of the object to which it refers.
+//The first exception is that we can initialize a reference to const from any expression that can be converted to the type of the reference.
+
 
 
 
