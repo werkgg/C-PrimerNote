@@ -153,6 +153,33 @@ void*  //
 
 //Generally, we use a void* pointer to deal with memory as memory, rather than using the pointer to access the object stored in that memory.
 
+//2.3.3 Understanding Compound Type Declarations
+//A variable definition consists of a base type and a list of declarators.
+//Each declarator can relate its variable to the base type differently from the other declarators in the same definition. Thus a single definition might define variables of different types.
+int i=1024, *p=&i, &r=i;
+
+//* and & are all type modifiers.
+
+//Both of the following is valid, I prefer the first one:)
+int *p;
+int* p;
+
+//Reference to pointer
+int i=42;
+int *p;       //p is a pointer to int
+int *&r=p;    //r is a reference to the pointer p
+r=&i;         //r refers to a pointer; assigning &i to r makes p point to i
+*r=0;         //deferencing r yields i, the object to which p points; changes i to 0
+
+//To understand the type of r, to read the definition from right to left.
+//The symbol closest to the name of the variable (in this case the & in &r) is the one that has the most immediate effect on the variable's type. Thus, we know that r is a  reference. The rest of the declarator determines the type to which r refers. The next symbol, * in this case, says that the type r refers to is a pointer type. Finally, the base type of the declarator says that r is a reference to a pointer to an int.
+
+//It can be easier to understand complicated pointer or reference declaration if you read them from right to left.
+
+//2.4 const Qualifier
+
+
+
 
 
 
