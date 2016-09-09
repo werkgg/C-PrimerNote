@@ -245,6 +245,92 @@ int *const curErr=&errNumb;
 
 //On the other hand, low-level const is never ignored. When we copy an object, both objects must have the same low-level const qualification or there must be a conversion between the types of the two objects. In general, we can convert a nonconst to const but not the other way round.
 
+//2.4.4 constexpr and constant expressions
+//A constant expression is an expression whose value cannot change and that can be evaluated at compile time. 
+//A literal is a constant expression. A const object that is initialized from a constant expression is also a constant expression.
+
+//Under the new standard, we can ask the compiler to verify that a variable is a constant expression by declaring the variable in a constexpr declaration. Variables declared as constexpr are implicitly const and must be initialized by constant expressions:
+constexpr int mf = 20;          // 20 is a constant expression
+constexpr int limit = mf + 1;   // mf + 1 is a constant expression
+constexpr int sz = size();      // ok only if size is a constexpr function
+
+//Generally, it is a good idea to use constexpr for variables that you intend to use as constant expressions.
+
+//Because a constant expression is one that can be evaluated at compile time, there are limits on the types that we can use in a constexpr declaration. The types we can use in a constexpr are known as “literal types” because they are simple enough to have literal values.
+//Of the types we have used so far, the arithmetic, reference, and pointer types are literal types.
+
+//It is important to understand that when we define a pointer in a constexpr declaration, the constexpr specifier applies to the pointer, not the type to which the pointer points.
+
+const int *p = nullptr;         // p is a pointer to a const int
+constexpr int *q = nullptr;     // q is a const pointer to int
+//Despite appearances, the types of p and q are quite different; p is a pointer to const, whereas q is a constant pointer. The difference is a consequence of the fact that constexpr imposes a top-level const (§ 2.4.3, p. 63) on the objects it defines.
+
+constexpr int *np = nullptr;    // np is a constant pointer to int that is null
+int j = 0;
+constexpr int i = 42;           // type of i is const int
+// i and j must be defined outside any function
+constexpr const int *p = &i;    // p is a constant pointer to the const int i
+constexpr int *p1 = &j;         // p1 is a constant pointer to the int j
+
+//2.5 Dealing with Types
+
+//2.5.1 Type Aliases
+
+//A type alias is a name that is a synonym for another type. Type aliases let us simplify complicated type definitions, making those types eaiser to use. Type aliases also let us emphasize the purpose for which a type is used.
+
+//typedef
+typedef double wages;    //wages is synonym for double
+typedef wages base, *p;  //base a synonym for double, p for double *
+
+//The keyword typedef may appear as part of the base type of a declaration. Declarations that include typedef define type aliases rather than variables. As in any other declaration, the declarators can include type modifiers that define compound types built from the base type of the definition.
+
+//The new standard introduced a second way to define a type alias, via an alias declaration:
+using SI = Sales_item;    //SI is a synonym for Sales_item
+
+//An alias declaration starts with the keyword using followed by the alias name and an =. The alias declaration defines the name on the left-hand side of the = as an alias for the type that appears on the right-hand side.
+//A type alias is a type name and can appear wherever a type name can appear.
+
+typedef char *pstring;
+const pstring cstr = 0; // cstr is a constant pointer to char
+const pstring *ps; // ps is a pointer to a constant pointer to char
+const char *cstr = 0; // wrong interpretation of const pstring cstr
+//The base type in these declarations is const pstring. As usual, a const that appears in the base type modifies the given type. The type of pstring is “pointer to char.” So, const pstring is a constant pointer to char—not a pointer to const char.
+//However, this interpretation is wrong. When we use pstring in a declaration, the base type of the declaration is a pointer type. When we rewrite the declaration using char*, the base type is char and the * is part of the declarator. In this case, const char is the base type. This rewrite declares cstr as a pointer to const char rather than as a const pointer to char.
+
+//2.5.2 The auto Type Specifier
+//Under the new standard, we can let the compiler figure out the type for us by using the auto type specifier. Unlike type specifiers, such as double, that name a specific type, auto tells the compiler to deduce the type from the initializer. By implication, a variable that uses auto as its type specifier must have an initializer:
+// the type of item is deduced from the type of the result of adding val1 and val2
+auto item = val1 + val2; // item initialized to the result of val1 + val2
+
+//auto ordinarily ignores top-level consts. As usual in initialization, low-level consts, such as when an initializer is a pointer to const, are kept.
+const int ci = i, &cr = ci;
+auto e = &ci; // e is const int*(& of a const object is low-level const)
+
+//If we want the deduced type to have a top-level const, we must say so explicitly:
+const auto f = ci; // deduced type of ci is int; f has type const int
+
+//2.5.3 The decltype Type Specifier
+//Sometimes we want to define a variable with a type that the compiler deduces from an expression but do not want to use that expression to initialize the variable. For such cases, the new standard introduced a second type specifier, decltype, which returns the type of its operand. The compiler analyzes the expression to determine its type but does not evaluate the expression:
+decltype(f()) sum = x; // sum has whatever type f returns
+//Here the compiler does not call f, but it uses the type that such a call would return as the type for sum. That is, the compiler gives sum the same type as the type that would be returned if we were to call f.
+
+//The way decltype handles top-level const and references differs subtly from the way auto does. When the expression to which we apply decltype is a variable, decltype returns the type of that variable, including top-level const and references.
+
+//It is worth noting that decltype is the only context in which a variable defined as a reference is not treated as a synonym for the object to which it refers.
+
+// decltype of an expression can be a reference type
+int i = 42, *p = &i, &r = i;
+decltype(r + 0) b; // ok: addition yields an int; b is an (uninitialized) int
+decltype(*p) c; // error: c is int& and must be initialized
+//Here r is a reference, so decltype(r) is a reference type. If we want the type to which r refers, we can use r in an expression, such as r + 0, which is an expression that yields a value that has a nonreference type.
+//On the other hand, the dereference operator is an example of an expression for which decltype returns a reference. As we’ve seen, when we dereference a pointer, we get the object to which the pointer points. Moreover, we can assign to that object. Thus, the type deduced by decltype(*p) is int&, not plain int.
+
+//Remember that decltype((variable)) (note, double parentheses) is always a reference type, but decltype(variable) is a reference type only if variable is a reference.
+
+//Assignment is an example of an expression that yields a reference type. The type is a reference to the type of the left-hand operand. That is, if i is an int, then the type of the expression i = x is int&.
+
+
+
 
 
 
