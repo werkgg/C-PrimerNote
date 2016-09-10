@@ -63,5 +63,15 @@ auto len = line.size();    //len has type string::size_type
 //Hence, cctype has the same contents as ctype.h, but in a form that is appropriate for C++ programs. In particular, the names defined in the cname headers are defined inside the std namespace, whereas those defined in the .h versions are not.
 //Ordinarily, C++ programs should use the cname versions of headers and not the name .h versions. That way names from the standard library are consistently found in the std namespace. Using the .h headers puts the burden on the programmer to remember which library names are inherited from C and which are unique to C++.
 
+//If we want to change the value of the characters in a string, we must define the loop variable as a reference type. Remember that a reference is just another name for a given object. When we use a reference as our control variable, that variable is bound to each element in the sequence in turn. Using the reference, we can change the character to which the reference is bound.
+for(auto &c:s) {};
+
+//The subscript operator (the [] operator) takes a string::size_type value that denotes the position of the character we want to access. The operator returns a reference to the character at the given position.
+//Subscripts for string start at zero; if s is a string with at least two characters, then s[0] is the first character, the last character is in s[s.size()-1]
+
+//The result of using an index outside this range is undefined. By implication, subscripting an empty string is undefined.
+
+
+
 
 
