@@ -1,1 +1,67 @@
+//Chapter03 String, Vectors and Arrays
+
+//3.1 Namespace using Declarations
+
+//A using declaration lets us use a name from a namespace without qualifying the name with a namespace_name:: prefix. A using declaration has the form
+using namespace::name;
+
+//Headers Should Not Include using Declarations
+//Code inside headers ordinarily should not use using declarations. The reason is that the contents of a header are copied into the including program’s text. If a header has a using declaration, then every program that includes that header gets that same using declaration. As a result, a program that didn’t intend to use the specified library name might encounter unexpected name conflicts.
+
+//3.2 Library string type
+
+//A string is a variable-length sequence of characters. To use the string type, we must include the string header. Because it is part of the library, string is defined in the std namespace. Our examples assume the following code:
+#include <string>
+using std::string;
+
+//3.2.1 Defining and Initializing strings
+
+//Ways to initialize a string
+string s1;       //Default initializing; s1 is the empty string
+string s2(s1);   //s2 is a copy of s1
+string s2=s1;    //Equivalent to s2(s1), s2 is a copy of s1
+string s3("value");    //s3 is a copy of the string literal, not including the null
+string s3="value";     //Equivalent to s3("value"), s3 is a copy of the string literal
+string s4(n, 'c');     //Initalize s4 with n copies of the character 'c'
+
+//When we initialize a variable using =, we are asking the compiler to copy initialize the object by copying the initializer on the right-hand side into the object being created. Otherwise, when we omit the =, we use direct initialization.
+
+//3.2.2 Operations on strings
+os<<s;    //writes s onto output stream os, returns os
+is>>s;    //reads whitespace-separated string from is into s, returns is
+getline(is, s);    //reads a line of input from 'is' into s. Return 'is'
+s.empty();    //returns true if s is empty
+s.size();    //returns the number of characters in s
+s[n];    //return a reference to the char at position n in s; positions start at 0
+s1+s2;    //returns a string that is the concatenation of s1 and s2
+s1=s2;    //replaces characters in s1 with a copy of s2
+s1==s2;    //the strings s1 and s2 are equal if they contain the same characters
+s1!=s2;
+<, <=, >, >=    //comparison are case-sensitive and u se dictionary ordering
+
+//Sometimes we do no want to ignore the whitespace in out input. In such cases, we can use the getline function instead of the >> operator.
+//The getline function takes an input stream and a string. This function reads the given stream up to and including the first newline and stores what it reads - not including the newline - in its string argument.
+
+//string::size_type Type
+//size returns a string::size_type value.
+//The string class—and most other library types—defines several companion types. These companion types make it possible to use the library types in a machineindependent manner. The type size_type is one of these companion types. To use the size_type defined by string, we use the scope operator to say that the name size_type is defined in the string class.
+//Although we don’t know the precise type of string::size_type, we do know that it is an unsigned type big enough to hold the size of any string. Any variable used to store the result from the string size operation should be of type string::size_type.
+
+//Admittedly, it can be tedious to type string::size_type. Under the new standard, we can ask the compiler to provide the appropriate type by using auto or decltype:
+auto len = line.size();    //len has type string::size_type
+
+//Becuase size returns an unsigned type, it is essential to remember that expression that mix signed and unsigned data can have surprising results.
+
+//We can use one type where another type is expected if there is a conversion from the given type to the expected type. The string library lets uf convert both character literals and character string literals to strings. 
+//When we mix the strings and string or character literals, at least one operand to each + operator must be of string type.
+
+//For historical reasons, and for compatibility with C, string literals are not standard library strings. It is important to remember that these types differ when you use string literals and library strings.
+
+//3.2.3 Dealing with the Characters in a string
+
+//In addition to facilities defined specifically for C++, the C++ library incorporates the C library. Headers in C have names of the form name .h. The C++ versions of these headers are named c name—they remove the .h suffix and precede the name with the letter c. The c indicates that the header is part of the C library.
+//Hence, cctype has the same contents as ctype.h, but in a form that is appropriate for C++ programs. In particular, the names defined in the cname headers are defined inside the std namespace, whereas those defined in the .h versions are not.
+//Ordinarily, C++ programs should use the cname versions of headers and not the name .h versions. That way names from the standard library are consistently found in the std namespace. Using the .h headers puts the burden on the programmer to remember which library names are inherited from C and which are unique to C++.
+
+
 
