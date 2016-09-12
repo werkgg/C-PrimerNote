@@ -71,6 +71,39 @@ for(auto &c:s) {};
 
 //The result of using an index outside this range is undefined. By implication, subscripting an empty string is undefined.
 
+//range-based for: range for statement
+for (declaration:expression)
+	statement
+//expression is an object of a type that represents a sequence, and declaration defines the variable that we’ll use to access the underlying elements in the sequence. On each iteration, the variable in declaration is initialized from the value of the next element in expression.
+
+//The subscript operator (the [ ] operator) takes a string::size_type value that denotes the position of the character we want to access. The operator returns a reference to the character at the given position.
+
+//Caution: Subscripts are Unchecked
+//When we use a subscript, we must ensure that the subscript is in range. That is, the subscript must be >= 0 and < the size() of the string. One way to simplify code that uses subscripts is always to use a variable of type string::size_type as the subscript. Because that type is unsigned, we ensure that the subscript cannot be less than zero. When we use a size_type value as the subscript, we need to check only that our subscript is less than value returned by size().
+//The library is not required to check the value of an subscript. The result of using an out-of-range subscript is undefined.
+
+//3.3 Library vector Type
+
+//A vector is a collection of objects, all of which have the same type. Every object in the collection has an associated index, which gives access to that object. A vector is often referred to as a container becuase it "contains" other objects.
+
+//Templates are not themselves functions or classes. Instead, they can be thought of as instructions to the compiler for generating classes or functions. The process that the compiler uses to create classes or functions from templates is called instantiation. When we use a template, we specify what kind of class or function we want the compiler to instantiate.
+
+//For a class template, we specify which class to instantiate by supplying additional information, the nature of which depends on the template. How we specify the information is always the same: We supply it inside a pair of angle brackets following the template’s name.
+
+//vector is a template, not a type. Types generated from vector must include the element type, for example, vector<int>.
+
+//3.3.1 Defining and Initializing vectors
+
+vector<T> v1;    //vector that holds object of type T. Default initialization; v1 is empty
+vector<T> v2(v1);    //v2 has a copy of each element in v1
+vector<T> v2=v1;    //Equivalent to v2(v1), v2 is a copy of the element in v1
+vector<T> v3(n, val);    //v3 has n element with value val
+vector<T> v4(n);    //v4 has n copies of a value-initialized object
+vector<T> v5{a, b, c...};    //v5 has as many elements as there are initializers; elements are initialized by corresponding initializers
+vector<T> v5={a, b, c...};    //Equivalent to v5{a, b, c...}
+
+
+
 
 
 
