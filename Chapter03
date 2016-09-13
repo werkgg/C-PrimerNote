@@ -177,6 +177,61 @@ auto it3 = v.cbegin(); // it3 has type vector<int>::const_iterator
 *it.empty() // error: attempts to fetch the member named empty from it
 // but it is an iterator and has no member named empty
 
+//To simplify expression, the language defines the arrow operator (the -> operator). The arrow operator combines dereference and member access into a single operation. That is, it->mem is a synonym for (*it).mem
+
+//It is important to realize that loops that use iterators should not add elements to the container to which the iterators refer.
+
+//3.4.2 Iterator Arithmetic
+
+//We can also subtract two iterators so long as they refer to elements in, or one off the end of, the same vector or string. The result is the distance between the iterators. By distance we mean the amount by which we’d have to change one iterator to get the other. The result type is a signed integral type named difference_type. Both vector and string define difference_type. This type is signed, because subtraction might have a negative result.
+
+//3.5 Arrays
+
+//An array is a data structure that is similar to the library vector type but offers a different trade-off between performance and flexibility. Like a vector, an array is a container of unnamed objects of a single type that we access by position. Unlike a vector, arrays have fixed size; we cannot add elements to an array. Because arrays have fixed size, they sometimes offer better run-time performance for specialized applications. However, that run-time advantage comes at the cost of lost flexibility.
+
+//If you don't know exactly how many elements you need, use a vector.
+
+//3.5.1
+
+//Arrays are compound type. An array declarator has the form a[d], where a is the name being defined and d is the dimension of the array.
+//The dimension specifies the number of elements and must be greater than zero. The number of elements in an array is part of the array's type. As a result, the dimension must be known at compile time, which means that the dimension must be a constant expression.
+
+//By default, the elements in an array are default initialized.
+//As with variables of built-in type, a default-initialized array of built-in type that is defined inside a function will have undefined values.
+
+//We can list initialize the elements in an array. When we do so, we can omit the dimension. If we omit the dimension, the compiler infers it from the number of initializers. If we specify a dimension, the number of initializers must not exceed the specified size. If the dimension is greater than the number of initializers, the initializers are used for the first elements and any remaining elements are value initialized.
+
+//Character arrays have an additional form of initialization: We can initialize such arrays from a string literal. When we use this form of initialization, it is important to remember that string literals end with a null character. That null character is copied into the array along with the characters in the literal.
+
+//We cannot initialize an array as a copy of another array, nor is it legal to assign one array to another.
+
+//Some compilers allow array assignment as a compiler extension. It is usually a good idea to avoid using nonstandard features. Programs that use such features, will not work with a different compiler.
+
+//Understanding complicated array declarations
+int *ptrs[10]; // ptrs is an array of ten pointers to int
+int &refs[10] = /* ? */; // error: no arrays of references
+int (*Parray)[10] = &arr; // Parray points to an array of ten ints
+int (&arrRef)[10] = arr; // arrRef refers to an array of ten ints
+
+//By default, type modifiers bind right to left. Reading the definition of ptrs from right to left is easy: We see that we’re defining an array of size 10, named ptrs, that holds pointers to int.
+//Reading the definition of Parray from right to left isn’t as helpful. Because the array dimension follows the name being declared, it can be easier to read array declarations from the inside out rather than from right to left. Reading from the inside out makes it much easier to understand the type of Parray. We start by observing that the parentheses around *Parray mean that Parray is a pointer. Looking right, we see that Parray points to an array of size 10. Looking left, we see that the elements in that array are ints. Thus, Parray is a pointer to an array of ten ints. Similarly, (&arrRef) says that arrRef is a reference. The type to which it refers is an array of size 10. That array holds elements of type int.
+
+//Of course, there are no limits on how many type modifiers can be used:
+int *(&arry)[10] = ptrs; // arry is a reference to an array of ten pointers
+//Reading this declaration from the inside out, we see that arry is a reference. Looking right, we see that the object to which arry refers is an array of size 10. Looking left, we see that the element type is pointer to int. Thus, arry is a reference to an array of ten pointers.
+
+//3.5.2 Accessing the Elements of an Array
+//When we use a variable to subscript an array, we normally should define that variable to have type size_t. size_t is a machine-specific unsigned type that is guaranteed to be large enough to hold the size of any object in the memory. The size_t type is defined in the cstddef header, which is the C++ version of the seddef.h header from the C library.
+
+//The most common source of security problems are buffer overflow bugs. Such bugs occur when a program fails to check a subscript and mistakenly uses memory outside the range of an array or similar data structure.
+
+//3.5.3 Pointers and Arrays
+
+
+
+
+
+
 
 
 
