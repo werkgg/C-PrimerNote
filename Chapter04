@@ -1,1 +1,67 @@
+//Chapter 04
+
+//An expression is composed of one or more operands and yields a result when it is evaluated. The simplest form of an expression is a single literal or variable. The result of such an expression is the value of the variable or literal. More complicated expressions are formed from an operator and one or more operands.
+
+//4.1 Fundamentals
+
+//4.1.1 Basic Concepts
+
+//Understanding expressions with multiple operators requires understanding the precedence and associativity of the operators and may depend on the order of evaluation of the operands.
+
+//What may be a bit surprising is that small integral type operands (e.g., bool, char, short, etc) are generally promoted to a larger integral type, typically int.
+
+//When we use an overloaded operator, the meaning of the operator—including the type of its operand(s) and the result—depend on how the operator is defined. However, the number of operands and the precedence and the associativity of the operator cannot be changed.
+
+//lvalue and rvalue
+//Every expression in C++ is either an rvalue or an lvalue. These names are inherited from C and originally had a simple mnemonic purpose: lvalues should stand on the left-hand side of an assignment whereas rvalues could not.
+//In C++, the distinction is less simple. In C++, an lvalule expression yields an object or a function. However, some lvalues, such as const objects, may not be the left-hand operand of an assignment. Moreover, some expressions yields objects but return them as rvalues, not lvalues. Roughly speaking, when we use an object as an rvalue, we use the object's value(its contents). When we use an object as an lvalue, we use the object's identity (its location in memory).
+
+//Operators differ as to whether they require lvalue or rvalue operands and as to whether they return lvalues or rvalues. The important point is that (with one exception that we’ll cover in § 13.6 (p. 531)) we can use an lvalue when an rvalue is required, but we cannot use an rvalue when an lvalue (i.e., a location) is required. When we use an lvalue in place of an rvalue, the object’s contents (its value) are used. We have already used several operators that involve lvalues.
+//Assignment requires a (nonconst) lvalue as its left-hand operand and yields its left-hand operand as an lvalue;
+//The address-of operator requires an lvalue operand and returns a pointer io its operand as an rvalue;
+//The built-in dereference and subscript operators and the iterator dereference and string and vector subscript operators all yields lvalues;
+//The built-in and iterator increment and decrement operators require lvalue operands and the prefix version (which are the ones we have used so far) also yields lvalues.
+
+//lvalues and rvalues also differ when used with decltype. When we apply decltype to an expression (other than a variable), the result is a reference type if the expression yields an lvalue. As an example, assume p is an int*. Because dereference yields an lvalue, decltype (*p) is int&. On the other hand, because the address-of operator yields an rvalue, decltype (&p) is int**, that is, a pointer to a pointer to type int.
+
+//4.1.2 Precedence and Associativity
+
+//An expression with two or more operators is a compound expression. 
+//Evaluating a compound expression involves grouping the operands to the operators. Precedence and associativity determine how the operands are grouped. That is, they determine which parts of the expression are the operands for each of the operators in the expression.
+//Programmers can override these rules by parenthesizing compound expressions to force a particular grouping.
+
+//Left associative: operators at the same precedence group left to right.
+
+//4.1.3 Order of Evaluation
+
+//Precedence specifies how the operands are grouped. It says nothing about the order in which the operands are evaluated. In most cases, the order is largely unspecified. In the following expression
+int i = f1() * f2();
+//we know that f1 and f2 must be called before the multiplication can be done. After all, it is their results that are multiplied. However, we have no way of knowing whether f1 will be called before f2 or vice versa.
+
+//There are four operators that do guarantee the order in which operands are evaluated: && || ?: ,
+
+//When you write compound expressions, two rules of thumb can be helpful:
+//1. When in doubt, parenthesize expressions to force the grouping that the logic of your program requires.
+//2. If you change the value of an operand, don’t use that operand elsewhere in the same expresion.
+
+//4.2 Arithmetic Operators
+//All arithmetic operators are left associative, meaning that they group left to right when the precedence levels are the same.
+
+//Unless noted otherwise, the arithmetic operators may be applied to any of the arithmetic types or to any type that can be converted to an arithmetic type. The operands and results of these operators are rvalues.
+
+//When applied to a pointer or arithmetic value, unary plus returns a (possibly promoted) copy of the value of its operand.
+
+//Division between integers returns an integer. If the quotient contains a fractional part, it is truncated toward zero.
+
+//The operands to % must have integral type.
+
+//The modulus operator is defined so that if m and n are integers and n is nonzero, then (m/n)*n + m%n is equal to m. By implication, if m%n is nonzero, it has the same sign as m. Earlier versions of the language permitted m%n to have the same sign as n on implementations in which negative m/n was rounded away from zero, but such implementations are now prohibited. Moreover, except for the obscure case where -m overflows, (-m)/n and m/(-n) are always equal to -(m/n), m%(-n) is equal to m%n, and (-m)%n is equal to -(m%n).
+
+
+
+
+
+
+
+
 
