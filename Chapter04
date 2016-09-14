@@ -57,6 +57,21 @@ int i = f1() * f2();
 
 //The modulus operator is defined so that if m and n are integers and n is nonzero, then (m/n)*n + m%n is equal to m. By implication, if m%n is nonzero, it has the same sign as m. Earlier versions of the language permitted m%n to have the same sign as n on implementations in which negative m/n was rounded away from zero, but such implementations are now prohibited. Moreover, except for the obscure case where -m overflows, (-m)/n and m/(-n) are always equal to -(m/n), m%(-n) is equal to m%n, and (-m)%n is equal to -(m%n).
 
+//4.3 Logical and Relational Operators
+
+//All operands to the logical and relational operators are rvalues and the result is an rvalue.
+
+//It is usually a bad idea to use the boolean literals true and false as operands in a comparison. These literals should be used only to compare to an object of type bool.
+if (val == true) { /* ... */ } // true only if val is equal to 1! 
+//There are two problems with this approach. First, it is longer and less direct than the previous code (although admittedly when first learning C++ this kind of abbreviation can be perplexing). Much more importantly, when val is not a bool, this comparison does not work as expected.
+//If val is not a bool, then true is converted to the type of val before the == operator is applied. That is, when val is not a bool, it is as if we had written
+if (val == 1) { /* ... */ }
+
+//4.4 Assignment Operators
+
+
+
+
 
 
 
