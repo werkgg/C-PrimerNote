@@ -220,7 +220,8 @@ uival + lval; // conversion depends on the size of unsigned int and long
 //Conversion to const
 //Conversion to const: We can convert a pointer to a nonconst type to a pointer to the corresponding const type, and similarly for references. That is, if T is a type, we can convert a pointer or a reference to T into a pointer or reference to const T, respectively.
 
-
+//Conversions Defined by Class Types
+//Class types can define conversions that the compiler will apply automatically. The compiler will apply only one class-type conversion at a time. In § 7.5.4 (p. 295) we’ll see an example of when multiple conversions might be required, and will be rejected.
 
 
 
