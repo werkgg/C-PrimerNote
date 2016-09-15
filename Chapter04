@@ -206,6 +206,23 @@ uival + lval; // conversion depends on the size of unsigned int and long
 
 //4.11.2 Other Implicit Conversions
 
+//Array to Pointer Conversion
+//In most expressions, when we use an array, the array is automatically converted to a pointer to the first element in that array.
+
+//This conversion is not performed when an array is used with decltype or as the operand of the address-of (&), sizeof, or typeid (which we’ll cover in operators. The conversion is also omitted when we initialize a reference to an array. As we’ll see in, a similar pointer conversion happens when we use a function type in an expression.
+
+//Pointer Conversions
+//There are several other pointer conversions: A constant integral value of 0 and the literal nullptr can be converted to any pointer type; a pointer to any nonconst type can be converted to void*, and a pointer to any type can be converted to a const void*. We’ll see in that there is an additional pointer conversion that applies to types related by inheritance.
+
+//Conversions to bool
+//Conversions to bool: There is an automatic conversion from arithmetic or pointer types to bool. If the pointer or arithmetic value is zero, the conversion yields false; any other value yields true.
+
+//Conversion to const
+//Conversion to const: We can convert a pointer to a nonconst type to a pointer to the corresponding const type, and similarly for references. That is, if T is a type, we can convert a pointer or a reference to T into a pointer or reference to const T, respectively.
+
+
+
+
 
 
 
