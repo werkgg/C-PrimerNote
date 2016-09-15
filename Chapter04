@@ -223,21 +223,64 @@ uival + lval; // conversion depends on the size of unsigned int and long
 //Conversions Defined by Class Types
 //Class types can define conversions that the compiler will apply automatically. The compiler will apply only one class-type conversion at a time. In § 7.5.4 (p. 295) we’ll see an example of when multiple conversions might be required, and will be rejected.
 
+//4.11.3 Explicit Conversions
 
+//Sometimes we want to explicitly force an object to be converted to a different type. To do so, we would need a way to explicitly do the conversion. We use a cast to request an explicit conversion.
 
+//Although necessary at times, casts are inherently dangerous constructs.
 
+//Name casts
+//A named cast has the following form:
+cast-name<type> (expression);
+//where type is the target of the conversion, and expression is the value to be cast. If type is a reference, then the result is a lvalue. The cast-name may be one of static_cast, dynamic_cast, const_cast, and reinterpret_cast.
+//The cast-name determines what kind of conversion is performed.
 
+//static_cast
+//Any well-defined type conversion, other than those involving low-level const, can be requested using a static-cast. For example, we can force our expression to use floatint-point division by casting one of the operands to double:
+double slope=static_cast<double> (j)/i;
 
+//A static_cast is often useful when a larger arithmetic type is assigned to a smaller type. The cast informs both the reader of the program and the compiler that we are aware of and are not concerned about the potential loss of precision. Compilers often generate a warning for assignments of a larger arithmetic type to a smaller type. When we do an explicit cast, the warning message is turned off.
 
+//A static_cast is also useful to perform a conversion that the compiler will not generate automatically. For example, we can use a static_cast to retrieve a pointer value that was stored in a void* pointer:
+void *p=&d;    //ok: address of any nonconst object can be stored in a void*
+double *dp = static_cast<double*>(p);    //ok: converts void* back to the original type
 
+//When we store a pointer in a void* and then use a static_cast to cast the pointer back to its original type, we are guaranteed that the pointer value is preserved. That is, the result of the cast will be equal to the original address value. However, we must be certain that the type to which we cast the pointer is the actual type of that pointer; if the types do not match, the result is undefined.
 
+//const_cast
+//A const_cast changes only a low-level const in its operand:
+const char *pc;
+char *p=const_cast<char*>(pc);    //ok: but writing through p is undefined
 
+//Conventionally we say that a cast that converts a const object to a nonconst type “casts away the const.” Once we have cast away the const of an object, the compiler will no longer prevent us from writing to that object. If the object was originally not a const, using a cast to obtain write access is legal. However, using a const_cast in order to write to a const object is undefined.
+//Only a const_cast may be used to change the constness of an expression. Trying to change whether an expression is const with any of the other forms of named cast is a compiler-time error. Similarly, we cannot use a const-cast to change the type of an expression:
+const char *cp;
+char *q=static_cast<char*>(cp);    //error static_cast can't cast away const
+static_cast<string>(cp);    //ok: converts string literal to string
+const_cast<string>(cp);    //error: const_cast only changes constness
 
+//reinterpret_cast
+//A reinterpret_cast generally performs a low-level reinterpretation of the bit pattern of its operands. As an example, given the following cast:
+int *ip;
+char *pc=reinterpret_cast<char*>(ip);
+//we must never forget that the actual object addressed by pc is an int, not a character. Any use of pc that assumes it's an ordinary character pointer is likely to fail at run time. For example:
+string str(pc);
+//is likely to result in bizarre run-time behavior.
 
+//The use of pc to initialize str is a good example of why reinterpret_cast is dangerous. The problem is that types are changed, yet there are no warnings or errors from the compiler. When we initialized pc with the address of an int, there is no error or warning from the compiler because we explicitly said the conversion was okay. Any subsequent use of pc will assume that the value it holds is a char*. The compiler has no way of knowing that it actually holds a pointer to an int. Thus, the initialization of str with pc is absolutely correct—albeit in this case meaningless or worse! Tracking down the cause of this sort of problem can prove extremely difficult, especially if the cast of ip to pc occurs in a file separate from the one in which pc is used to initialize a string.
 
+//A reinterpret_cast is inherently machine dependent. Safely using reinterpret_cast requires completely understanding the types involved as well as the details of how the compiler implements the cast.
 
+//old_style casts
+//In early versions of C++, an explicit cast took one of the following two forms:
+type(expr);    //function-style cast notation
+(type) expr;    //C-language-style cast notation
 
+//Advice: Avoid Casts
+//Casts interfere with normal type checking. As a result, we strongly recommend that programmers avoid casts. This advice is particularly applicable to reinterpret_casts. Such casts are always hazardous. A const_cast can be useful in the context of overloaded functions. Other uses of const_cast often indicate a design flaw. The other casts, static_cast and dynamic_cast, should be needed infrequently. Every time you write a cast, you should think hard about whether you can achieve the same result in a different way. If the cast is unavoidable, errors can be mitigated by limiting the scope in which the cast value is used and by documenting all assumptions about the types involved.
 
+//Depending on the types involved, an old-style cast has the same behavior as a const_cast, a static_cast, or a reinterpret_cast. When we use an old-style cast where a static_cast or a const_cast would be legal, the old-style cast does the same conversion as the respective named cast. If neither cast is legal, then an old-style cast performs a reinterpret_cast.
+char *pc=(char*)ip;    //ip is a pointer to int
+//has the same effect as using a reinterpret_cast
 
-
-
+//Old-style cast are less visible than are named casts. Because they are easily overlooked, it is more difficult to track down a rogue cast.
