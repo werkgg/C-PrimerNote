@@ -69,6 +69,149 @@ if (val == 1) { /* ... */ }
 
 //4.4 Assignment Operators
 
+//The left-hand operand of an assignment operator must be a modifiable lvalue. 
+//The result of an assignment is its left-hand operand, which is an lvalue. The type of the result is the type of the left-hand operand. If the types of the left and right operand differ, the right-hand operand is converted to the type of the left.
+
+//Under the new standard, we can use a braced initializer list (§ 2.2.1, p. 43) on the
+k = {3.14}; // error: narrowing conversion
+vector<int> vi; // initially empty
+vi = {0,1,2,3,4,5,6,7,8,9}; // vi now has ten elements, values 0 through 9
+//If the left-hand operand is of a built-in type, the initializer list may contain at most one value, and that value must not require a narrowing conversion.
+
+//Regardless of the type of the left-hand operand, the initializer list may be empty. In this case, the compiler generates a value-initialized temporary and assigns that value to the left-hand operand.
+
+//Assignment is right associative
+
+//Assignments often occur in conditions. Because assignment has relatively low precedence, we usually must parenthesize the assignment for the condition to work properly.
+
+//Compound Assignment Operators
+a+=3;    //same as a=a+3;
+//with the exception that, when we use the compound assignment, the left-hand operand is evaluated only once. If we use an ordinary assignment, that operand is evaluated twice: once in the expression on the right-hand side and again as the operand on the left hand. In many, perhaps most, contexts this difference is immaterial aside from possible performance consequences.
+
+//4.5 Increment and Decrement Operators
+
+//There are two forms of these operators: prefix and postfix. So far, we have used only the prefix form. This form increments (or decrements) its operand and yields the changed object as its result. The postfix operators increment (or decrement) the operand but yield a copy of the original, unchanged value as its result.
+
+//Prefix and postfix operators require lvalue operands. The prefix operators return the object itself as an lvalue. The postfix operators return a copy of the object's original value as an rvalue.
+
+//The precedence of postfix increment is higher than that of the dereference operator, so *pbeg++ is equivalent to *(pbeg++).
+
+//4.6 The Member Access Operators
+
+//The dot and arrow operators provide for member access. The dot operator fetches a member from an object of class type; arrow is defined so that ptr->mem is a synonym for (*ptr).mem.
+
+//Because dereference has a lower precedence than dot, we must parenthesize the dereference subexpression.
+
+//The arrow operator requires a pointer operand and yields an lvalue. The dot operator yields an lvalue if the object from which the member is fetched is an lvalue; otherwise the result is an rvalue.
+
+//4.7 The Conditional Operator
+
+//The result of the conditional operator is an lvalue if both expressions are lvalues or if they convert to a common lvalue type. Otherwise the result is an rvalue.
+
+//We can nest one conditional operator inside another.
+finalgrade = (grade > 90) ? "high pass" : (grade < 60) ? "fail" : "pass";
+
+//The conditional operator is right associative, meaning (as usual) that the operands group right to left.
+
+//The conditional operator has fairly low precedence. When we embed a conditional expression in a larger expression, we usually must parenthesize the conditional subexpression.
+
+//4.8 The Bitwise Operators
+
+//The bitwise operators take operands of integral type that they use as a collection of bits.
+
+//If the operand is signed and its value is negative, then the way that the "sign bit" is handled in a number of the bitwise operations is machine dependent. Moreover, doing a left shift that changes the value of the sign bit is undefined.
+//Because there are no guarantees for how the sign bit is handled, we strongly recommend using unsigned types with the bitwise operators.
+
+//Shift Operations (aka IO operators) are left associative.
+//An overloaded operator has the same precedence ans associativity as the built-in version of that operator.
+//The expression
+cout<<"hi"<<"there"<<endl;
+//executes as:
+( (cout<<"hi")<<"there")<<endl;
+
+//The shift operators have midlevel precedence: lower than the arithmetic operators but higher than the relational, assignment, and conditional operators.
+
+//4.9 The sizeof Operator
+
+//The sizeof operator returns the size, in bytes, of an expression or a type name. The operator is right associative. The result of sizeof is a constant expression of type size_t. 
+//The operator takes one of two forms:
+sizeof(type);
+sizeof expr;
+//The sizeof operator is unusual in that it does not evaluate its operand.
+
+//Under the new standard, we can use the scope operator to ask for the size of a member of a class type. Ordinarily we can only access the members of a class through an object of that type. We don’t need to supply an object, because sizeof does not need to fetch the member to know its size.
+
+//The result of applying sizeof depends in part on the type involved:
+//sizeof char or an expression of type char is guaranteed to be 1.
+//sizeof a reference type returns the size of an object of the referenced type.
+//sizeof a pointer returns the size needed hold a pointer.
+//sizeof a dereferenced pointer returns the size of an object of the type to which the pointer points; the pointer need not be valid.
+//sizeof an array is the size of the entire array. It is equivalent to taking the sizeof the element type times the number of elements in the array. Note that sizeof does not convert the array to a pointer.
+//sizeof a string or a vector returns only the size of the fixed part of these types; it does not return the size used by the object’s elements.
+
+//4.10 Comma Operator
+
+//The comma operator takes two operands, which it evaluates from left to right. Like the logical AND and logical OR and the conditional operator, the comma operator guarantees the order in which its operands are evaluated.
+//The left-hand expression is evaluated and its result is discarded. The result of a comma expression is the value of its right-hand expression.
+//The result is an lvalue if the right-hand operand is a lvalue.
+
+//4.11 Type Conversions
+
+//Two types are related if there is a conversion between them.
+
+//C++ defines a set of conversions to transform the operands to a common type. These conversion are carried out automatically without programmer intervention - and sometimes without programmer knowledge. For that reason, they are referred to as implicit conversion.
+
+//The implicit conversions among the arithmetic types are defined to preserve precision, if possible. Most often, if an expression has both integral and floatingpoint operands, the integer is converted to floating-point.
+//In an initialization, the type of the object we are initializing dominates. The initializer is converted to the object's type.
+
+//When Implicit Conversions Occur:
+//The compiler automatically converts operands in the following circumstances:
+//In most expressions, values of integral types smaller than int are first promoted to an appropriate larger integral type.
+//In conditions, nonbool expressions are converted to bool.
+//In initializations, the initializer is converted to the type of the variable; in assignments, the right-hand operand is converted to the type of the left-hand.
+//In arithmetic and relational expressions with operands of mixed types, the types are converted to a common type.
+//As we’ll see in Chapter 6, conversions also happen during function calls.
+
+//4.11.1 The Arithmetic Conversions
+//The arithmetic conversions, convert one arithmetic type to another. The rules define a hierarchy of type conversions in which operands to an operator are converted to the widest type.
+
+//Integral Promotions
+//The integral promotions convert the small integral types to a larger integral type. The types bool, char, signed char, unsigned char, short, and unsigned short are promoted to int if all possible values of that type fit in an int. Otherwise, the value is promoted to unsigned int.
+//The larger char types (wchar_t, char16_t, and char32_t) are promoted to the smallest type of int, unsigned int, long, unsigned long, long long, or unsigned long long in which all possible values of that character type fit.
+
+//When the signedness differs and the type of the unsigned operand is the same as or larger than that of the signed operand, the signed operand is converted to unsigned. For example, given an unsigned int and an int, the int is converted to unsigned int. It is worth noting that if the int has a negative value, the result will be converted as described in, with the same results.
+
+//Understanding the Arithmetic Conversions
+bool flag; 
+char cval;
+short sval; 
+unsigned short usval;
+int ival; 
+unsigned int uival;
+long lval; 
+unsigned long ulval;
+float fval; 
+double dval;
+3.14159L + 'a'; // 'a' promoted to int, then that int converted to long double
+dval + ival; // ival converted to double
+dval + fval; // fval converted to double
+ival = dval; // dval converted (by truncation) to int
+flag = dval; // if dval is 0, then flag is false, otherwise true
+cval + fval; // cval promoted to int, then that int converted to float
+sval + cval; // sval and cval promoted to int!!!
+cval + lval; // cval converted to long
+ival + ulval; // ival converted to unsigned long
+usval + ival; // promotion depends on the size of unsigned short and int
+uival + lval; // conversion depends on the size of unsigned int and long
+
+//4.11.2 Other Implicit Conversions
+
+
+
+
+
+
+
 
 
 
