@@ -284,3 +284,6 @@ char *pc=(char*)ip;    //ip is a pointer to int
 //has the same effect as using a reinterpret_cast
 
 //Old-style cast are less visible than are named casts. Because they are easily overlooked, it is more difficult to track down a rogue cast.
+
+//Most operators do not specify the order in which operands are evaluated: the compiler is free to evaluate either the left- or right-hand operand first. Often, the order of operand evaluation has no impact on the result of the expression. However, if both operands refer to the same object and one of the operands changes that object, then the program has a serious bug-and a bug that may be hard to find
+//Operands are often converted automatically from their initial type to another related type. For example, small integral types are promoted to a larger integral type in every expression. Conversions exists for both built-in and class types. Conversions can also be done explicitly through a cast.
