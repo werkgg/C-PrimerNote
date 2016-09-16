@@ -2,5 +2,34 @@
 
 //5.1 Simple Statements
 
+//An expression becomes an expression statement when it is followed by a semicolon. Expression statements cause the expression to be evaluated and its result discarded.
+
+//A compound statement, usually referred to as a block, is a sequence of statements and declarations surrounded by a pair of curly braces.
+
+//We can define an empty block by writing a pair of curlies with no statements. An empty block is equivalent to a null statement.
+
+//5.2 Statement Scope
+
+//The value of an object defined in a control structure is used by that structure. Therefore, such variables must be initialized.
+
+//5.3 Conditional Statements
+
+//5.3.1 The if Statement
+
+//C++ provides two statements that allow for conditional execution. The if statement determines the flow of control based on a condition. The switch statement evaluates an integral expression and chooses one of several execution paths based on the expression’s value.
+
+//Dangling else: in C++ the ambiguity is resolved by specifying that each else is matched with the closest preceding unmatched if.
+
+//5.3.2 The switch Statement
+
+//A switch statement provides a convenient way of selecting among a (possibly large) number of fixed alternatives. As one example, suppose that we want to count how often each of the five vowels appears in some segment of text. Our program logic is as follows:
+//Read every character in the input.
+//Compare each character to the set of vowels.
+//If the character matches one of the vowels, add 1 to that vowel’s count.
+//Display the results.
+
+
+
+
 
 
