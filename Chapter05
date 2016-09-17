@@ -28,8 +28,167 @@
 //If the character matches one of the vowels, add 1 to that vowel’s count.
 //Display the results.
 
+//A switch statement executes by evaluating the parenthesized expression that follows the keyword switch. That expression may be an initialized variable declaration. The expression is converted to integral type. The result of the expression is compared with the value associated with each case.
+//If the expression matches the value of a case label, execution begins with the first statement following that label. Execution continues normally from that statement through the end of the switch or until a break statement.
+//If no match is found, execution falls through to the first statement following the switch. As we already know, in this example, exiting the switch returns control to the condition in the while.
+//It is an error for any two case labels to have the same value. There is also a special case label, default.
 
+//It is important to understand that execution flows across case labels. After a case label is matched, execution starts at that label and continues across all the remaining cases or until the program explicitly interrupts it. To avoid executing code for subsequent cases, we must explicitly tell the compiler to stop execution. Under most conditions, the last statement before the next case label is break.
 
+//Although it is not necessary to include a break after the last label of a switch, the safest course is to provide one. That way, if an additional case is added later, the break is already in place.
 
+//The default label
+//The statements following the default label are executed when no case label matches the value of the switch expression.
 
+//It can be useful to define a default label even if there is no work for the default case. Defining an empty default section indicates to subsequent readers that the case was considered.
 
+//It is illegal to jump from a place where a variable with an initializer is out of scope to a place where that variable is in scope.
+
+//5.4 Iterative Statemsnts
+
+//Iterative statements, commonly called loops, provide for repeated execution until a condition is true. The while and for statements test the condition before executing the body. The do while executes the body and then tests its condition.
+
+//5.4.1 The while Statement
+//A while loop is generally used when we want to iterate indefinitely, such as when we read input. A while is also useful when we want access to the value of the loop control variable after the loop finishes.
+
+//5.4.2 Traditional for Statement
+//The syntactic form of the for statement is:
+for(init-statement; condition; expression)
+	statement
+
+//As in any other declaration, init-statement can define several objects. However, init-statement may be only a single declaration statement. Therefore, all the variables must have the same base type.
+
+//5.4.3 Range for Statement
+//The new standard introduced a simpler for statement that can be used to iterate through the elements of a container or other sequence. 
+for(declaration:expression)
+    statement
+//expression must represent a sequence, such as a braced initializer list, an array, or an object of a type such as vector or string that has begin and end members that return iterators.
+//declaration defines a variable. It must be possible to convert each element of the sequence to the variable's type. 
+
+//We can understand why we cannot use a range for to add elements to a vector (or other container). In a range for, the value of end() is cached. If we add elements (or remove them from) the sequence, the value of end might be invalidated.
+
+//5.4.4 The do while Statement
+//A do while statement is like a while but the condition is tested after the statement body completes. Regardless of the value of the condition, we execute the loop at least once:
+do
+    statement
+while(condition);
+//A do while ends with a semicolon after the parenthesized condition.
+//Variables used in condition must be defined outside the body of the do while statement.
+
+//5.5 Jump Statements
+
+//Jump statements interrupt the flow of execution. C++ offers four jumps: break, continue, goto, and return.
+
+//5.5.1 The break Statement
+
+//A break statement terminates the nearest enclosing while, do while, for, or switch statement. Execution resumes at the statement immediately following the terminated statement.
+//A break can appear only within an iteration statement or switch statement (including inside statements or blocks nested inside such loops). A break affects only the nearest enclosing loop or switch.
+
+//5.5.2 The continue Statement
+
+//A continue statement terminates the current iteration of the nearest enclosing loop and immediately begins the next iteration. A continue can appear only inside a for, while, or do while loop, including inside statements or blocks nested inside such loops.
+//Like the break statement, a continue inside a nested loop affects only the nearest enclosing loop. Unlike a break, a continue may appear inside a switch only if that switch is embedded inside an iterative statement.
+
+//A continue interrupts the current iteration; execution stays inside the loop. In the case of a while or a do while, execution continues by evaluating the condition. In a traditional for loop, execution continues at the expression inside the for header. In a range for, execution continues by initializing the control variable from the next element in the sequence.
+
+//5.5.3 The goto Statement
+
+//A goto statement provides an unconditional jump from the goto to another statement in the same function.
+//Programs should not use GOTOs. GOTOs make programs hard to understand and hard to modify.
+
+//The syntactic form of a goto statement is:
+goto label;
+//where label is an identifier that identifies a statement. A labeled statement is any statement that is preceded by an identifier followed by a colon:
+end: return;    //labeled statement; may be the target of a goto
+
+//Label identifiers are independent of names used for variables and other identifiers. Hence, a label may have the same identifier as another entity in the program without interfering with the other uses of that identifier. The goto and the labeled statement to which it transfers control must be in the same function.
+
+//As with a switch statement, a goto cannot transfer control from a point where an initialized variable is out of scope to a point where that variable is in scope.
+
+//5.6 try Blocks and Exception Handling
+
+//Exceptions are run-time anomalies—such as losing a database connection or encountering unexpected input—that exist outside the normal functioning of a program. Dealing with anomalous behavior can be one of the most difficult parts of designing any system.
+//Exception handling is generally used when one part of a program detects a problem that it cannot resolve and the problem is such that the detecting part of the program cannot continue. In such cases, the detecting part needs a way to signal that something happened and that it cannot continue. Moreover, the detecting part needs a way to signal the problem without knowing what part of the program will deal with the exceptional condition. Having signaled what happened, the detecting part stops processing.
+//A program that contains code that might raise an exception (usually) has another part to handle whatever happened. For example, if the problem is invalid input, the handling part might ask the user to provide correct input. If the database was lost, the handling part might alert an operator.
+
+//Exception handling supports this cooperation between the detecting and handling parts of a program. In C++, exception handling involves:
+//throw expressions, which the detecting part uses to indicate that it encountered something it can’t handle. We say that a throw raises an exception.
+//try blocks, which the handling part uses to deal with an exception. A try block starts with the keyword try and ends with one or more catch clauses. Exceptions thrown from code executed inside a try block are usually handled by one of the catch clauses. Because they “handle” the exception, catch clauses are also known as exception handlers.
+//A set of exception classes that are used to pass information about what happened between a throw and an associated catch.
+
+//5.6.1 A throw Expression
+if(item1.isbn()!=item2.isbn())
+    throw runtime_error("Data must refer to same ISBN");
+//if we're still here, do something else
+//In this code, if the ISBNs differ, we throw an expression that is an object of type runtime_error. Throwing an exception terminates the current function and transfers control to a handler that will know how to handle this error.
+//The type runtime_error is one of the standard library exception types and is defined in the stdexcept header. We must initialize a runtime_error by giving it a strong or a C-style character string. That string provides additional information about the problem.
+
+//5.6.2 The try Block
+try {
+program-statements
+} catch (exception-declaration) {
+handler-statements
+} catch (exception-declaration) {
+handler-statements
+} // . . .
+//A try block begins with the keyword try followed by a block, which, as usual, is a sequence of statements enclosed in curly braces.
+//Following the try block is a list of one or more catch clauses. A catch consists of three parts: the keyword catch, the declaration of a (possibly unnamed) object within parentheses (referred to as an exception declaration), and a block. When a catch is selected to handle an exception, the associated block is executed. Once the catch finishes, execution continues with the statement immediately following the last catch clause of the try block.
+//The program-statements inside the try constitute the normal logic of the program. Like any other blocks, they can contain any C++ statement, including declarations. As with any block, variables declared inside a try block are inaccessible outside the block —in particular, they are not accessible to the catch clauses.
+
+while (cin >> item1 >> item2) {
+try {
+    // execute code that will add the two Sales_items
+    // if the addition fails, the code throws a runtime_error exception
+    } catch (runtime_error err) {
+        // remind the user that the ISBNs must match and prompt for another pair
+        cout << err.what()
+        << "\nTry Again? Enter y or n" << endl;
+        char c;
+        cin >> c;
+        if (!cin || c == 'n')
+        break; // break out of the while loop
+    }
+}
+
+//The ordinary logic of the program that manages the interaction with the user appears inside the try block. This part of the program is wrapped inside a try because it might throw an exception of type runtime_error.
+//This try block has a single catch clause, which handles exceptions of type runtime_error. The statements in the block following the catch are executed if code inside the try block throws a runtime_error. Our catch handles the error by printing a message and asking the user to indicate whether to continue. If the user enters ’n’, then the break is executed and we exit the while. Otherwise, execution falls through to the closing brace of the while, which transfers control back to the while condition for the next iteration.
+//The prompt to the user prints the return from err.what(). We know that err has type runtime_error, so we can infer that what is a member function of the runtime_error class. Each of the library exception classes defines a member function named what. These functions take no arguments and return a Cstyle character string (i.e., a const char*). The what member of runtime_error returns a copy of the string used to initialize the particular object.
+
+//Functions Are Exited during the Search for a Handler
+//In complicated systems, the execution path of a program may pass through multiple try blocks before encountering code that throws an exception. For example, a try block might call a function that contains a try, which calls another function with its own try, and so on.
+//The search for a handler reverses the call chain. When an exception is thrown, the function that threw the exception is searched first. If no matching catch is found, that function terminates. The function that called the one that threw is searched next. If no handler is found, that function also exits. That function’s caller is searched next, and so on back up the execution path until a catch of an appropriate type is found.
+//If no appropriate catch is found, execution is transferred to a library function named terminate. The behavior of that function is system dependent but is guaranteed to stop further execution of the program.
+//Exceptions that occur in programs that do not define any try blocks are handled in the same manner: After all, if there are no try blocks, there can be no handlers. If a program has no try blocks and an exception occurs, then terminate is called and the program is exited.
+
+//5.6.3 Standard Exception
+
+//The C++ library defines several classes that it uses to report problems encountered in the functions in the standard library. These exception classes are also intended to be used in the programs we write. These classes are defined in four headers:
+//The exception header defines the most general kind of exception class named exception. It communicates only that an exception occurred but provides no additional information.
+//The stdexcept header defines several general-purpose exception classes.
+//The new header defines the bad_alloc exception type.
+//The type_info header defines the bad_cast exception type.
+
+//The library exception classes have only a few operations. We can create, copy, and assign objects of any of the exception types.
+
+#include <iostream>
+#include <stdexcept>
+using std::cin; using std::cout; using std::endl; using std::runtime_error;
+
+int main(void)
+{
+    for (int i, j; cout << "Input two integers:\n", cin >> i >> j; )
+    {
+        try 
+        {
+            if (j == 0) 
+                throw runtime_error("divisor is 0");
+            cout << i / j << endl;
+        }
+        catch (runtime_error err) 
+        {
+            cout << err.what() << "\n";
+        }
+    }
+
+    return 0;
+}
