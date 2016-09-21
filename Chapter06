@@ -470,14 +470,141 @@ void print(const int ia[], size_t size){
 
 //6.6 Function Matching
 
+//Determining the Candidate and Viable Functions
 
+void f();
+void f(int);
+void f(int, int);
+void f(double, double = 3.14);
+f(5.6); // calls void f(double, double)
+//The first step of function matching identifies the set of overloaded functions considered for the call. The functions in this set are the candidate functions. A candidate function is a function with the same name as the called function and for which a declaration is visible at the point of the call. In this example, there are four candidate functions named f.
+//The second step selects from the set of candidate functions those functions that can be called with the arguments in the given call. The selected functions are the viable functions. To be viable, a function must have the same number of parameters as there are arguments in the call, and the type of each argument must match—or be convertible to—the type of its corresponding parameter.
+//We can eliminate two of our candidate functions based on the number of arguments. The function that has no parameters and the one that has two int parameters are not viable for this call. Our call has only one argument, and these functions have zero and two parameters, respectively.
+//The function that takes a single int and the function that takes two doubles might be viable. Either of these functions can be called with a single argument. The function taking two doubles has a default argument, which means it can be called with a single argument.
+//Having used the number of arguments to winnow the candidate functions, we next look at whether the argument types match those of the parameters. As with any call, an argument might match its parameter either because the types match exactly or because there is a conversion from the argument type to the type of the parameter.
+//In this example, both of our remaining functions are viable:
+//f(int) is viable because a conversion exists that can convert the argument of type double to the parameter of type int.
+//f(double, double) is viable because a default argument is provided for the function’s second parameter and its first parameter is of type double, which exactly matches the type of the parameter.
 
+//When a function has default arguments, a call may appear to have fewer arguments than it actually does.
+//If there are no viable functions, the compiler will complain that there is no matching function.
 
+//The third step of function matching determines which viable function provides the best match for the call. This process looks at each argument in the call and selects the viable function (or functions) for which the corresponding parameter best matches the argument. We’ll explain the details of “best” in the next section, but the idea is that the closer the types of the argument and parameter are to each other, the better the match.
+//In our case, there is only one (explicit) argument in the call. That argument has type double. To call f(int), the argument would have to be converted from double to int. The other viable function, f(double, double), is an exact match for this argument. An exact match is better than a match that requires a conversion. Therefore, the compiler will resolve the call f(5.6) as a call to the function that has two double parameters. The compiler will add the default argument for the second, missing argument.
 
+//Function Matching with Multiple Parameters
+//There is an overall best match if there is one and only one function for which:
+//The match for each argument is no worse than the match required by any other viable functions; there is at least one argument for which the match is better than the match provided by any other viable function.
+//If after looking at each argument there is no single function that is preferable, then the call is in error. The compiler will complain that the call is ambiguous.
 
+//Casts should not be needed to call an overloaded function. The need for a cast suggests that the parameter sets are designed poorly.
 
+//6.6.1 Argument Type Conversions
 
+//In order to determine the best match, the compiler ranks the conversions that could be used convert each argument to the type of its corresponding parameter.
+//Conversions are ranked as follows:
+//1. An exact match. An exact match happens when:
+//The argument and parameter types are identical;
+//The argument is converted from an array or function type to corresponding pointer type;
+//A top-level const is added to or discarded from the argument.
+//2. Match through a const conversion.
+//3. Match through a promotion.
+//4. Match through an arithmetic or pointer conversion.
+//5. Match through a class-type conversion.
 
+//Promotions and conversions among the built-in types can yield surprising results in the context of function matching. Fortunately, well-designed systems rarely include functions with parameters as closely related as those in the following examples.
 
+//Matches Requiring Promotion or Arithmetic Conversion
+//In order to analyze a call, it is important to remember that the small integral types always promote to int or to a larger integral type. Given two functions, one of which takes an int and the other a short, the short version will be called only on values of type short. Even though the smaller integral values might appear to be a closer match, those values are promoted to int, whereas calling the short version would require a conversion.
 
+//All the arithmetic conversions are treated as equivalent to each other. The conversion from int to unsigned int, for example, does not take precedence over the conversion from int to double.
 
+//Function Matching and const Arguments
+
+//When we call an overloaded function that differs on whether a reference of pointer parameter refers or points to const, the compiler uses the constness of the argument to decide which function to call.
+
+//6.7 Pointers to Functions
+
+//A function pointer is just that - a pointer that denotes a function rather than an object. Like any other pointer, a function pointer points to a particular type. A function's type is determined by its return type and the types of its parameters. The function's name is not part of its type.
+bool lengthCompare(const string &, const string &);
+//has type bool(const string&, const string&). To declare a pointer that can point at this function, we declare a pointer in place of the function name:
+//pf points to a function returning bool that takes two const string references
+bool (*pf) (const string&, const string&);    //uninitialized
+//Starting from the name we are declaring, we see that pf is preceded by a *, so pf is a pointer. To the right is a parameter list, which means that pf points a function. Looking left, we find that the type the function returns is bool. Thus, pf points to a function that has two const string& parameters and returns a bool.
+//Note: The parameters around *pf are necessary. If we omit the parentheses, then we declare pf as a function that returns a pointer to bool:
+//declare a function named pf that returns a bool*
+bool *pf(const string&, const string&);
+
+//Using Function Pointers
+//When we use the name of a function as a value, the function is automatically converted to a pointer. For example, we can assign the address of lengthCompare to pf as follows:
+pf=lengthCompare;  //pf now points to the function named lengthCompare
+pf=&lengthCompare;  //equivalent assignment: address-of operator is optional
+
+//Moreover, we can use a pointer to a function to call the function to which the pointer points. We can do so directly - there is no need to dereference the pointer:
+bool b1=pf("hello", "goodbye");    //calls lengthCompare
+bool b2=(*pf)("hello", "goodbye");    //equivalent call
+bool b3=lengthCompare("hello", "goodbye");    //equivalent call
+
+//There is no conversion between pointers to one function type and pointers to another function type. However, as usual, we can assign nullptr or a zero-valued integer constant expression to a function pointer to indicate that the pointer does not point to any function:
+string::size_type sumLength(const string&, const string&);
+bool cstringCompare(const char*, const char*);
+pf = 0; // ok: pf points to no function
+pf = sumLength; // error: return type differs
+pf = cstringCompare; // error: parameter types differ
+pf = lengthCompare; // ok: function and pointer types match exactly
+
+//Pointers to Overloaded Functions
+//As usual, when we use an overloaded function, the context must make it clear which version is being used. When we declare a pointer to an overloaded function
+void ff(int*);
+void ff(unsigned int);
+void (*pf1)(unsigned int) = ff; // pf1 points to ff(unsigned)
+//the compiler uses the type of the pointer to determine which overloaded function to use. The type of the pointer must match one of the overloaded functions exactly:
+void (*pf2)(int) = ff; // error: no ff with a matching parameter list
+double (*pf3)(int*) = ff; // error: return type of ff and pf3 don't match
+
+//Function Pointer Parameters
+//Just as with arrays, we cannot define parameters of function type but can have a parameter that is a pointer to function. As with arrays, we can write a parameter that looks like a function type, but it will be treated as a pointer:
+// third parameter is a function type and is automatically treated as a pointer to function
+void useBigger(const string &s1, const string &s2,
+bool pf(const string &, const string &));
+// equivalent declaration: explicitly define the parameter as a pointer to function
+void useBigger(const string &s1, const string &s2,
+bool (*pf)(const string &, const string &));
+//When we pass a function as an argument, we can do so directly. It will be automatically converted to a pointer:
+// automatically converts the function lengthCompare to a pointer to function
+useBigger(s1, s2, lengthCompare);
+//As we’ve just seen in the declaration of useBigger, writing function pointer types quickly gets tedious. Type aliases, along with decltype, let us simplify code that uses function pointers:
+// Func and Func2 have function type
+typedef bool Func(const string&, const string&);
+typedef decltype(lengthCompare) Func2; // equivalent type
+// FuncP and FuncP2 have pointer to function type
+typedef bool(*FuncP)(const string&, const string&);
+typedef decltype(lengthCompare) *FuncP2; // equivalent type
+//Here we’ve used typedef to define our types. Both Func and Func2 are function types, whereas FuncP and FuncP2 are pointer types. It is important to note that decltype returns the function type; the automatic conversion to pointer is not done. Because decltype returns a function type, if we want a pointer we must add the * ourselves. We can redeclare useBigger using any of these types:
+// equivalent declarations of useBigger using type aliases
+void useBigger(const string&, const string&, Func);
+void useBigger(const string&, const string&, FuncP2);
+//Both declarations declare the same function. In the first case, the compiler will automatically convert the function type represented by Func to a pointer.
+
+//Returning a Pointer to Function
+//As with arrays, we can’t return a function type but can return a pointer to a function type. Similarly, we must write the return type as a pointer type; the compiler will not automatically treat a function return type as the corresponding pointer type. Also as with array returns, by far the easiest way to declare a function that returns a pointer to function is by using a type alias:
+using F = int(int*, int); // F is a function type, not a pointer
+using PF = int(*)(int*, int); // PF is a pointer type
+//Here we used type alias declarations to define F as a function type and PF as a pointer to function type. The thing to keep in mind is that, unlike what happens to parameters that have function type, the return type is not automatically converted to a pointer type. We must explicitly specify that the return type is a pointer type:
+PF f1(int); // ok: PF is a pointer to function; f1 returns a pointer to function
+F f1(int); // error: F is a function type; f1 can't return a function
+F *f1(int); // ok: explicitly specify that the return type is a pointer to function
+//Of course, we can also declare f1 directly, which we’d do as
+int (*f1(int))(int*, int);
+//Reading this declaration from the inside out, we see that f1 has a parameter list, so f1 is a function. f1 is preceded by a * so f1 returns a pointer. The type of that pointer itself has a parameter list, so the pointer points to a function. That function returns an int.
+//For completeness, it’s worth noting that we can simplify declarations of functions that return pointers to function by using a trailing return:
+auto f1(int)->int(*) (int*, int);
+
+//Using auto or decltype for Function Pointer Types
+//If we know which function(s) we want to return, we can use decltype to simplify writing a function pointer return type. For example, assume we have two functions, both of which return a string::size_type and have two const string& parameters. We can write a third function that takes a string parameter and returns a pointer to one of these two functions as follows:
+string::size_type sumLength(const string&, const string&);
+string::size_type largerLength(const string&, const string&);
+// depending on the value of its string parameter,
+// getFcn returns a pointer to sumLength or to largerLength
+decltype(sumLength) *getFcn(const string &);
+//The only tricky part in declaring getFcn is to remember that when we apply decltype to a function, it returns a function type, not a pointer to function type. We must add a * to indicate that we are returning a pointer, not a function.
