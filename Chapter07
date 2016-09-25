@@ -451,6 +451,77 @@ class Sales_data {
 //The constructor that takes an istream& also delegates. It delegates to the default constructor, which in turn delegates to the three-argument constructor. Once those constructors complete their work, the body of the istream& constructor is run. Its constructor body calls read to read the given istream.
 //When a constructor delegates to another constructor, the constructor initializer list and function body of the delegated-to constructor are both executed. In Sales_data, the function bodies of the delegated-to constructors happen to be empty. Had the function bodies contained code, that code would be run before control returned to the function body of the delegating constructor.
 
+//7.5.3 The Role of the Default Constructor
+
+//The default constructor is used automatically whenever an object is default or value initialized. Default initialization happens
+//• When we define nonstatic variables (§ 2.2.1, p. 43) or arrays (§3.5.1, p.114) at block scope without initializers
+//• When a class that itself has members of class type uses the synthesized default constructor (§ 7.1.4, p. 262)
+//• When members of class type are not explicitly initialized in a constructor initializer list (§ 7.1.4, p. 265)
+//Value initialization happens
+//• During array initialization when we provide fewer initializers than the size of the array (§ 3.5.1, p. 114)
+//• When we define a local static object without an initializer (§ 6.1.1, p. 205)
+//• When we explicitly request value initialization by writing an expressions of the form T() where T is the name of a type (The vector constructor that takes a single argument to specify the vector’s size (§ 3.3.1, p. 98) uses an argument of this kind to value initialize its element initializer.)
+//Classes must have a default constructor in order to be used in these contexts. Most of these contexts should be fairly obvious.
+
+//7.5.4 Implicit Class-Type Conversions
+
+//The language defines several automatic conversions among the built-in types. We also noted that classes can define implicit conversions as well. Every constructor that can be called with a single argument defines an implicit conversion to a class type. Such constructors are sometimes referred to as converting constructors.
+
+//Note: A constructor that can be called with a single argument defines an implicit conversion from the constructor's parameter type to the class type.
+
+string null_book = "9-999-99999-9";
+// constructs a temporary Sales_data object
+// with units_sold and revenue equal to 0 and bookNo equal to null_book
+item.combine(null_book);
+//Here we call the Sales_data combine member function with a string argument. This call is perfectly legal; the compiler automatically creates a Sales_data object from the given string. That newly generated (temporary) Sales_data is passed to combine. Because combine’s parameter is a reference to const, we can pass a temporary to that parameter.
+
+//Only One Class-Type Conversion is Allowed
+
+//We noted that the compiler will automatically apply only one class-type conversion. For example, the following code is in error because it implicitly uses two conversions:
+// error: requires two user-defined conversions:
+// (1) convert "9-999-99999-9" to string
+// (2) convert that (temporary) string to Sales_data
+item.combine("9-999-99999-9");
+//If we wanted to make this call, we can do so by explicitly converting the character string to either a string or a Sales_data object:
+// ok: explicit conversion to string, implicit conversion to Sales_data
+item.combine(string("9-999-99999-9"));
+// ok: implicit conversion to string, explicit conversion to Sales_data
+item.combine(Sales_data("9-999-99999-9"));
+
+//Suppressing Implicit Conversions Defined by Constructors
+
+//We can prevent the use of a constructor in a context that requires an implicit conversion by declaring the constructor as explicit.
+
+//The explicit keyword is meaningful only on constructors that can be called with a single argument. Constructors that require more arguments are not used to perform an implicit conversion, so there is no need to designate such constructors as explicit. The explicit keyword is used only on the constructor declaration inside the class. It is not repeated on a definition made outside the class body:
+// error: explicit allowed only on a constructor declaration in a class header
+explicit Sales_data::Sales_data(istream& is) {
+    read(is, *this);
+}
+
+//explicit Constructors can be Used Only for Direct Initialization
+
+//One context in which implicit conversions happen is when we use the copy form of initialization (with an =). We cannot use an explicit constructor with this form of initialization; we must use direct initialization:
+Sales_data item1 (null_book); // ok: direct initialization
+// error: cannot use the copy form of initialization with an explicit constructor
+Sales_data item2 = null_book;
+
+//When a constructor is declared explicit, it can be used only with the direct form of initialization. Moroever, the compiler will not use this constructor in an automatic conversion.
+
+//Explicitly Using Constructors for Conversions
+
+//Although the compiler will not use an explicit constructor for an implicit conversion, we can use such constructors explicitly to force a conversion:
+// ok: the argument is an explicitly constructed Sales_data object
+item.combine(Sales_data(null_book));
+// ok: static_cast can use an explicit constructor
+item.combine(static_cast<Sales_data>(cin));
+//In the first call, we use the Sales_data constructor directly. This call constructs a temporary Sales_data object using the Sales_data constructor that takes a string. In the second call, we use a static_cast to perform an explicit, rather than an implicit, conversion. In this call, the static_cast uses the istream constructor to construct a temporary Sales_data object.
+
+//Library Classes with explicit Constructors
+
+//Some of the library classes that we’ve used have single-parameter constructors:
+//• The string constructor that takes a single parameter of type const char* (§ 3.2.1, p. 84) is not explicit.
+//• The vector constructor that takes a size (§ 3.3.1, p. 98) is explicit.
+
 
 
 
