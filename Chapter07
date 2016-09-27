@@ -522,8 +522,156 @@ item.combine(static_cast<Sales_data>(cin));
 //• The string constructor that takes a single parameter of type const char* (§ 3.2.1, p. 84) is not explicit.
 //• The vector constructor that takes a size (§ 3.3.1, p. 98) is explicit.
 
+//7.5.5 Aggregate Class
 
+//An aggregate class gives users direct access to its members and has special initialization syntax. A class is an aggregate if:
+//• All of its data members are public
+//• It does not define any constructors
+//• It has no in-class initializers (§ 2.6.1, p. 73)
+//• It has no base classes or virtual functions, which are class-related features that we’ll cover in Chapter 15
+//For example, the following class is an aggregate:
+struct Data {
+	int ival;
+	string s;
+};
 
+//We can initialize the data members of an aggregate class by providing a braced list of member initializers:
+// val1.ival = 0; val1.s = string("Anna")
+Data val1 = { 0, "Anna" };
+//The initializers must appear in declaration order of the data members. That is, the initializer for the first member is first, for the second is next, and so on. The following, for example, is an error.
 
+//As with initialization of array elements (§ 3.5.1, p. 114), if the list of initializers has fewer elements than the class has members, the trailing members are value initialized. The list of initializers must not contain more elements than the class has members.
 
+//It is worth noting that there are three significant drawbacks to explicitly initializing the members of an object of class type:
+//• It requires that all the data members of the class be public.
+//• It puts the burden on the user of the class (rather than on the class author) to correctly initialize every member of every object. Such initialization is tedious and error-prone because it is easy to forget an initializer or to supply an inappropriate initializer.
+//• If a member is added or removed, all initializations have to be updated.
 
+//7.5.6 Literal Classes
+
+//We noted that the parameters and return type of a constexpr function must be literal types. In addition to the arithmetic types, references, and pointers, certain classes are also literal types. Unlike other classes, classes that are literal types may have function members that are constexpr. Such members must meet all the requirements of a constexpr function. These member functions are implicitly const.
+
+//An aggregate class whose data members are all of literal type is a literal class. A nonaggregate class, that meets the following restrictions, is also a literal class:
+//• The data members all must have literal type.
+//• The class must have at least one constexpr constructor.
+//• If a data member has an in-class initializer, the initializer for a member of builtin type must be a constant expression, or if the member has class type, the initializer must use the member’s own constexpr constructor.
+//• The class must use default definition for its destructor, which is the member that destroys objects of the class type.
+
+//constexpr Constructors
+
+//Although constructors can’t be const, constructors in a literal class can be constexpr functions. Indeed, a literal class must provide at least one constexpr constructor.
+
+//A constexpr constructor can be declared as = default (or as a deleted function, which we cover in. Otherwise, a constexpr constructor must meet the requirements of a constructor—meaning it can have no return statement—and of a constexpr function—meaning the only executable statement it can have is a return statement. As a result, the body of a constexpr constructor is typically empty. We define a constexpr constructor by preceding its declaration with the keyword constexpr:
+class Debug {
+  public:
+	constexpr Debug(bool b = true): hw(b), io(b), other(b) { }
+	constexpr Debug(bool h, bool i, bool o):
+	hw(h), io(i), other(o) { }
+	constexpr bool any() { return hw || io || other; }
+	void set_io(bool b) { io = b; }
+	void set_hw(bool b) { hw = b; }
+	void set_other(bool b) { hw = b; }
+  private:
+	bool hw; // hardware errors other than IO errors
+	bool io; // IO errors
+	bool other; // other errors
+};
+
+//A constexpr constructor must initialize every data member. The initializers must either use a constexpr constructor or be a constant expression.
+//A constexpr constructor is used to generate objects that are constexpr and for parameters or return types in constexpr functions:
+constexpr Debug io_sub(false, true, false); // debugging IO
+if (io_sub.any()) // equivalent to if(true)
+	cerr << "print appropriate error messages" << endl;
+constexpr Debug prod(false); // no debugging during production
+if (prod.any()) // equivalent to if(false)
+	cerr << "print an error message" << endl;
+
+//7.6 static Class Members
+
+//Classes sometimes need members that are associated with the class, rather than with individual objects of the class type.
+
+//Declaring static Members
+
+//We say a member is associated with the class by adding the keyword static to its declaration. Like any other member, static members can be public or private. The type of a static data member can be const, reference, array, class type, and so forth.
+
+//As an example, we’ll define a class to represent an account record at a bank:
+class Account {
+  public:
+	void calculate() { amount += amount * interestRate; }
+	static double rate() { return interestRate; }
+	static void rate(double);
+  private:
+	std::string owner;
+	double amount;
+	static double interestRate;
+	static double initRate();
+};
+//The static members of a class exist outside any object. Objects do not contain data associated with static data members. Thus, each Account object will contain two data members—owner and amount. There is only one interestRate object that will be shared by all the Account objects.
+//Similarly, static member functions are not bound to any object; they do not have a this pointer. As a result, static member functions may not be declared as const, and we may not refer to this in the body of a static member. This restriction applies both to explicit uses of this and to implicit uses of this by calling a nonstatic member.
+
+//Using a Class static Member
+
+//We can access a static member directly through the scope operator:
+double r;
+r = Account::rate(); // access a static member using the scope operator
+//Even though static members are not part of the objects of its class, we can use an object, reference, or pointer of the class type to access a static member:
+Account ac1;
+Account *ac2 = &ac1;
+// equivalent ways to call the static member rate function
+r = ac1.rate(); // through an Account object or reference
+r = ac2->rate(); // through a pointer to an Account object
+
+//Member functions can use static members directly, without the scope operator:
+class Account {
+  public:
+	void calculate() { amount += amount * interestRate; }
+  private:
+	static double interestRate;
+// remaining members as before
+};
+
+//Defining static Members
+
+//As with any other member function, we can define a static member function inside or outside of the class body. When we define a static member outside the class, we do not repeat the static keyword. The keyword appears only with the declaration inside the class body.
+
+//As with any class member, when we refer to a class static member outside the class body, we must specify the class in which the member is defined. The static keyword, however, is used only on the declaration inside the class body.
+
+//Because static data members are not part of individual objects of the class type, they are not defined when we create objects of the class. As a result, they are not initialized by the class’ constructors. Moreover, in general, we may not initialize a static member inside the class. Instead, we must define and initialize each static data member outside the class body. Like any other object, a static data member may be defined only once.
+
+//Like global objects, static data members are defined outside any function. Hence, once they are defined, they continue to exist until the program completes.
+//We define a static data member similarly to how we define class member functions outside the class. We name the object’s type, followed by the name of the class, the scope operator, and the member’s own name:
+// define and initialize a static class member
+double Account::interestRate = initRate();
+//This statement defines the object named interestRate that is a static member of class Account and has type double. Once the class name is seen, the remainder of the definition is in the scope of the class. As a result, we can use initRate without qualification as the initializer for rate. Note also that even though initRate is private, we can use this function to initialize interestRate. The definition of interestRate, like any other member definition, has access to the private members of the class.
+
+//The best way to ensure that the object is defined exactly once is to put the definition of static data member in the same file that contains the definitions of the class noninline member functions.
+
+//In-class Initialization of static Data Members
+//Ordinarily, class static members may not be initialized in the class body. However, we can provide in-class initializers for static members that have const integral type and must do so for static members that are constexprs of literal type. The initializers must be constant expressions. Such members are themselves constant expressions; they can be used where a constant expression is required.
+
+//If the member is used only in contexts where the compiler can substitute the member’s value, then an initialized const or constexpr static need not be separately defined. However, if we use the member in a context in which the value cannot be substituted, then there must be a definition for that member.
+
+//Even if a const static data member is initialized in the class body, that member ordinarily should be defined outside the class definition.
+
+//static Members Can Be Used in Ways Ordinary Members Can't
+
+//As we’ve seen, static members exist independently of any other object. As a result, they can be used in ways that would be illegal for nonstatic data members. As one example, a static data member can have incomplete type. In particular, a static data member can have the same type as the class type of which it is a member. A nonstatic data member is restricted to being declared as a pointer or a reference to an object of its class:
+class Bar {
+  public:
+	// ...
+  private:
+	static Bar mem1; // ok: static member can have incomplete type
+	Bar *mem2; // ok: pointer member can have incomplete type
+	Bar mem3; // error: data members must have complete type
+};
+
+//Another difference between static and ordinary members is that we can use a static member as a default argument (§ 6.5.1, p. 236):
+class Screen {
+  public:
+	// bkground refers to the static member
+	// declared later in the class definition
+	Screen& clear(char = bkground);
+  private:
+	static const char bkground;
+};
+//A nonstatic data member may not be used as a default argument because its value is part of the object of which it is a member. Using a nonstatic data member as a default argument provides no object from which to obtain the member’s value and so is an error.
