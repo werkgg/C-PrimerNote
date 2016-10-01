@@ -1,2 +1,611 @@
 //Chapter09 Sequential Containers
 
+//The order of the elements in a sequential container corresponds to the positions in which the elements are added to the container. The library also defines several associative containers, which hold elements whose position depends on a key associated with each element.
+
+//The container classes share a common interface, which each of the containers extends in its own way. This common interface makes the library easier to learn; what we learn about one kind of container applies to another. Each kind of container offers a different set of performance and functionality trade-offs.
+//A container holds a collection of objects of a specified type. The sequential containers let the programmer control the order in which the elements are stored and accessed. That order does not depend on the values of the elements. Instead, the order corresponds to the position at which elements are put into the container. By contrast, the ordered and unordered associative containers, which we cover in Chapter 11, store their elements based on the value of a key.
+//The library also provides three container adaptors, each of which adapts a container type by defining a different interface to the container's operations.
+
+//9.1 Overview of the Sequential Containers
+
+//The sequential containers, all provide fast sequential access to their elements. However, these containers offer different performance trade-offs relative to:
+//• The costs to add or delete elements to the container
+//• The costs to perform nonsequential access to elements of the container
+vector;    //Flexible-size array. Support fast random access. Inserting or deleting elements other than at the back may be slow;
+deque;    //Double-ended queue. Supports fast random access. Fast insert/delete at front or back;
+list;    //Doubly linked list. Supports only bidirectional sequential access. Fast insert/delete at any point in the list;
+forward_list;    //Singly linked list. Supports only sequential access in one direction. Fast insert/delete at any point in the list;
+array;    //Fixed-size arrays. Supports fast random access. Cannot add or remove elements;
+string;    //A specialized container, similar to vector, that contains characters. Fast random access. Fast insert/delete at the back.
+
+//With the exception of array, which is a fixed-size container, the containers provide efficient, flexible memory management. We can add and remove elements, growing and shrinking the size of the container. The strategies that the containers use for storing their elements have inherent, and sometimes significant, impact on the efficiency of these operations. In some cases, these strategies also affect whether a particular container supplies a particular operation.
+
+//For example, string and vector hold their elements in contiguous memory. Because elements are contiguous, it is fast to compute the address of an element from its index. However, adding or removing elements in the middle of one of these containers takes time: All the elements after the one inserted or removed have to be moved to maintain contiguity. Moreover, adding an element can sometimes require that additional storage be allocated. In that case, every element must be moved into the new storage.
+
+//The list and forward_list containers are designed to make it fast to add or remove an element anywhere in the container. In exchange, these types do not support random access to elements: We can access an element only by iterating through the container. Moreover, the memory overhead for these containers is often substantial, when compared to vector, deque, and array.
+
+//A deque is a more complicated data structure. Like string and vector, deque supports fast random access. As with string and vector, adding or removing elements in the middle of a deque is a (potentially) expensive operation. However, adding or removing elements at either end of the deque is a fast operation, comparable to adding an element to a list or forward_list.
+
+//The forward_list and array types were added by the new standard. An array is a safer, easier-to-use alternative to built-in arrays. Like built-in arrays, library arrays have fixed size. As a result, array does not support operations to add and remove elements or to resize the container. A forward_list is intended to be comparable to the best handwritten, singly linked list. Consequently, forward_list does not have the size operation because storing or computing its size would entail overhead compared to a handwritten list. For the other containers, size is guaranteed to be a fast, constant-time operation.
+
+//For reasons we’ll explain in § 13.6 (p. 531), the new library containers are dramatically faster than in previous releases. The library containers almost certainly perform as well as (and usually better than) even the most carefully crafted alternatives. Modern C++ programs should use the library containers rather than more primitive structures like arrays.
+
+//Deciding Which Sequential Container to Use
+//Ordinarily, it is best to use vector unless there is a good reason to prefer another container.
+
+//There are a few rules of thumb that apply to selecting which container to use:
+//• Unless you have a reason to use another container, use a vector.
+//• If your program has lots of small elements and space overhead matters, don’t use list or forward_list.
+//• If the program requires random access to elements, use a vector or a deque.
+//• If the program needs to insert or delete elements in the middle of the container, use a list or forward_list.
+//• If the program needs to insert or delete elements at the front and the back, but not in the middle, use a deque.
+//• If the program needs to insert elements in the middle of the container only while reading input, and subsequently needs random access to the elements:
+//– First, decide whether you actually need to add elements in the middle of a container. It is often easier to append to a vector and then call the library sort function to reorder the container when you’re done with input.
+//– If you must insert into the middle, consider using a list for the input phase. Once the input is complete, copy the list into a vector.
+//What if the program needs random access and needs to insert and delete elements in the middle of the container? This decision will depend on the relative cost of accessing the elements in a list or forward_list versus the cost of inserting or deleting elements in a vector or deque. In general, the predominant operation of the application (whether it does more access or more insertion or deletion) will determine the choice of container type. In such cases, performance testing the application using both containers will probably be necessary.
+
+//Best Practices:
+//If you're not sure which container to use, write your code so that it uses only operations common to both vectors and lists: Use iterations, not subscripts, and avoid random access to elements. That way it will be easy to use either a vector or a list as necessary.
+
+//9.2 Container Library Overview
+
+//The operations on the container types form a kind of hierarchy:
+//Some operations are provided by all container types.
+
+//Container Operations
+//Type Aliases
+iterator;    //Type of the iterator for this container type;
+const_iterator;    //Iterator type that can read but not change its element;
+size_type;    //Unsigned integral type type big enough to hold the size of the largest possible container of this container type;
+differences_type;    //Signed integral type big enough to hold the distance between iterators;
+value_type;    //Element type;
+reference;    //Element's lvalue type; synonym for value_type&
+const_reference;    //Element's const lvalue type(i.e. const value_type&)
+//Construction
+C c;    //Default constructor, empty container;
+C c1(c2);    //Construct c1 as a copy of c2;
+C c(b, e);    //Copy elements from the range denoted by iterator b and e; (not valid for array)
+C c{a, b, c...};    //List initialize c;
+//Assignment and swap
+c1=c2;    //Replace elements in c1 with those in c2;
+c1={a, b, c...};    //Replace elements in c1 with those in the list (not valid for array);
+a.swap(b);    //swap elements in a with those in b;
+swap(a, b);    //Equivalent to a.swap(b);
+//Size
+c.size();    //Number of elements in c (not valid for forward_list);
+c.max_size();    //Maximum number of elements c can hold;
+c.empty();    //false if c has any elements, true otherwise;
+//Add/Remove Elements (not valid for array)
+//Note: the interface to these operations varies by container type
+c.insert(args);    //Copy element(s) as specified by args into c;
+c.emplace(inits);    //Use inits to construct an element in c;
+c.erase(args);    //Remove element(s) specified by args;
+c.clear();    //Remove all elements from c; returns void;
+//Equality and Relational Operators
+==, !=;    //Equality valid for all container types;
+<, <=, >, >=;    //Relationals (not valid for unordered associative containers)
+//Obtain Iterators
+c.begin(), c.end();    //Return iterator to the first, one past the last element in c;
+c.cbegin(), c.cend();    //Return const_iterator;
+//Additional Members of Reversible Containers (not valid for forward_list)
+reverse_iterator;    //Iterator that addresses elements in reverse order;
+const_reverse_iterator;    //Reverse iterator that cannot write the element;
+c.rbegin(), c.rend();    //Return iterator to the last, one past the first element in c;
+c.crbegin(), c.crend();    //Return const_reverse_iterator;
+
+//Other operations are specific to the sequential, the associative, or the unordered containers.
+//Defining and Initializing Containers
+C c;    //Default constructor. If C is array, then the elements in c are default-initialized; otherwise c is empty;
+C c1(c2);    //c1 is a copy of c2. c1 and c2 must have the same type (i.e. they must be the same container type and hold the same element type; for array must also have the same size);
+C c1=c1;    
+C c{a, b, c...};    //c is a copy of the elements in the initializer list. Type of elements in the list must be compatible with the element type of C. For array, the list must have same number or fewer elements than the size of the array, any missing elements are value-initialized;
+C c={a, b, c...};
+Cc(b, e);    //c is a copy of the elements in the range denoted by iterators b and e. Type of the elements must be compatible with the element type of C (not valid for array);
+//Constructors that take a size are valid for sequential containers (not including array) only
+C seq(n);    //seq has n value-initialized elements; this constructor is explicit (not valid for string)
+C seq(n, t);    //seq has n elements with value t;
+
+//Still others are common to only a smaller subset of the containers.
+
+//In general, each container is defined in a header file with the same name as the type. That is, deque is in the deque header, list in the list header, and so on. The containers are class templates. As with vectors, we must supply additional information to generate a particular container type. For most, but not all, of the containers, the information we must supply is the element type.
+
+//Constraints on Types that a Container can Hold
+
+//Almost any type can be used as the element type of a sequential container. In particular, we can define a container whose element type is itself another container. We define such containers exactly as we do any other container type: We specify the element type (which in this case is a container type) inside angle brackets:
+vector<vector<string>> lines; // vector of vectors
+//Here lines is a vector whose elements are vectors of strings.
+//Older compilers may require a space between the angle brackets, for example, vector<vector<string> >.
+
+//9.2.1 Iterators
+
+//As with the containers, iterators have a common interface: If an iterator provides an operation, then the operation is supported in the same way for each iterator that supplies that operation. For example, all the iterators on the standard container types let us access an element from a container, and they all do so by providing the dereference operator. Similarly, the iterators for the library containers all define the increment operator to move from one element to the next.
+//With one exception, the container iterators support all the operations listed in Table 3.6 (p. 107). The exception is that the forward_list iterators do not support the decrement (--) operator. The iterator arithmetic operations listed in Table 3.7 (p. 111) apply only to iterators for string, vector, deque, and array. We cannot use these operations on iterators for any of the other container types.
+
+//Iterator Range
+//The concept of an iterator range is fundamental to the standard library.
+
+//An iterator range is denoted by a pair of iterators each of which refers to an element, or to one past the last element, in the same container. These two iterators, often referred to as begin and end—or (somewhat misleadingly) as first and last—mark a range of elements from the container.
+//The name last, although commonly used, is a bit misleading, because the second iterator never refers to the last element of the range. Instead, it refers to a point one past the last element. The elements in the range include the element denoted by first and every element from first up to but not including last. This element range is called a left-inclusive interval. The standard mathematical notation for such a range is
+[ begin, end)
+//indicating that the range begins with begin and ends with, but does not include, end. The iterators begin and end must refer to the same container. The iterator end may be equal to begin but must not refer to an element before the one denoted by begin.
+
+//Requirements on Iterators Forming an Iterator Range
+//Two iterators, begin and end, form an iterator range, if
+//• They refer to elements of, or one past the end of, the same container, and
+//• It is possible to reach end by repeatedly incrementing begin. In other words, end must not precede begin.
+//Warning: The compiler cannot enforce these requirements. It is up to us to ensure that our programs follow these conventions.
+
+//Programming Implications of Using Left-Inclusive Ranges
+//The library uses left-inclusive ranges because such ranges have three convenient properties. Assuming begin and end denote a valid iterator range, then
+//• If begin equals end, the range is empty
+//• If begin is not equal to end, there is at least one element in the range, and begin refers to the first element in that range
+//• We can increment begin some number of times until begin == end
+
+//9.2.2 Container Type Members
+
+//In addition to the iterator types we’ve already used, most containers provide reverse iterators. Briefly, a reverse iterator is an iterator that goes backward through a container and inverts the meaning of the iterator operations.
+//The remaining type aliases let us use the type of the elements stored in a container without knowing what that type is. If we need the element type, we refer to the container’s value_type. If we need a reference to that type, we use reference or const_reference.
+
+//9.2.3 begin and end Members
+
+//The begin and end operations yield iterators that refer to the first and one past the last element in the container. These iterators are most often used to form an iterator range that encompasses all the elements in the container.
+//There are several versions of begin and end: The versions with an r return reverse iterators. Those that start with a c return the const version of the related iterator.
+
+//The functions that do not begin with a c are overloaded. That is, there are actually two members named begin. One is a const member (§ 7.1.2, p. 258) that returns the container’s const_iterator type. The other is nonconst and returns the container’s iterator type.
+//As with pointers and references to const, we can convert a plain iterator to the corresponding const_iterator, but not vice versa.
+
+//When write access is not needed, use cbegin and cend.
+
+//9.2.4 Defining and Initializing a Container
+
+//Every container type defines a default constructor. With the exception of array, the default constructor creates an empty container of the specified type. Again excepting array, the other constructors take arguments that specify the size of the container and initial values for the elements.
+
+//Initializing a Container as a Copy of Another Container
+
+//There are two ways to create a new container as a copy of another one: We can directly copy the container, or (excepting array) we can copy a range of elements denoted by a pair of iterators.
+//To create a container as a copy of another container, the container and element types must match. When we pass iterators, there is no requirement that the container types be identical. Moreover, the element types in the new and original containers can differ as long as it is possible to convert the elements we’re copying to the element type of the container we are initializing:
+// each container has three elements, initialized from the given initializers
+list<string> authors = {"Milton", "Shakespeare", "Austen"};
+vector<const char*> articles = {"a", "an", "the"};
+list<string> list2(authors); // ok: types match
+deque<string> authList(authors); // error: container types don't match
+vector<string> words(articles); // error: element types must match
+// ok: converts const char* elements to string
+forward_list<string> words(articles.begin(), articles.end());
+
+//Note: When we initialize a container as a copy of another container, the container type and element type of both containers must be identical.
+
+//The constructor that takes two iterators uses them to denote a range of elements that we want to copy. As usual, the iterators mark the first and one past the last element to be copied. The new container has the same size as the number of elements in the range. Each element in the new container is initialized by the value of the corresponding element in the range.
+
+//List Initialization
+
+//Under the new standard, we can list initialize a container. When we do so, we explicitly specify values for each element in the container. For types other than array, the initializer list also implicitly specifies the size of the container: The container will have as many elements as there are initializers.
+
+//Sequential Container Size-Related Constructors
+//In addition to the constructors that sequential containers have in common with associative containers, we can also initialize the sequential containers (other than array) from a size and an (optional) element initializer. If we do not supply an element initializer, the library creates a value-initialized one for us.
+//We can use the constructor that takes a size argument if the element type is a builtin type or a class type that has a default constructor. If the element type does not have a default constructor, then we must specify an explicit element initializer along with the size.
+
+//The constructors that take a size are valid only for sequential containers; they are not supported for the associative containers.
+
+//Library arrays Have Fixed Size
+
+//Just as the size of a built-in array is part of its type, the size of a library array is part of its type. When we define an array, in addition to specifying the element type, we also specify the container size:
+array<int, 42>;    //type is array that holds 42 ints
+array<string, 10>;    //type is array that holds 10 strings
+
+//To use an array type we must specify both the element type and the size:
+array<int, 10>::size_type i; // array type includes element type and size
+array<int>::size_type j; // error: array<int> is not a type
+
+//Because the size is part of the array’s type, array does not support the normal container constructors. Those constructors, implicitly or explicitly, determine the size of the container. It would be redundant (at best) and error-prone to allow users to pass a size argument to an array constructor.
+
+//The fixed-size nature of arrays also affects the behavior of the constructors that array does define. Unlike the other containers, a default-constructed array is not empty: It has as many elements as its size. These elements are default initialized just as are elements in a built-in array. If we list initialize the array, the number of the initializers must be equal to or less than the size of the array. If there are fewer initializers than the size of the array, the initializers are used for the first elements and any remaining elements are value initialized. In both cases, if the element type is a class type, the class must have a default constructor in order to permit value initialization
+
+//It is worth noting that although we cannot copy or assign objects of built-in array types, there is no such restriction on library array.
+int digs[10] = {0,1,2,3,4,5,6,7,8,9};
+int cpy[10] = digs; // error: no copy or assignment for built-in arrays
+array<int, 10> digits = {0,1,2,3,4,5,6,7,8,9};
+array<int, 10> copy = digits; // ok: so long as array types match
+//As with any container, the initializer must have the same type as the container we are creating. For arrays, the element type and the size must be the same, because the size of an array is part of its type.
+
+//9.2.5 Assignment and swap
+
+//The assignment-related operators act on the entire container. The assignment operator replaces the entire range of elements in the left-hand container with copies of the elements from the right-hand operand:
+c1=c2;    //Replace the elements in c1 with copies of the elements in c2. c1 and c2 must be the same type;
+c={a, b, c...};    //Replace the elements in c1 with copies of the elements in the initializer list (not valid for array);
+swap(c1, c2);    //Exchanges elements in c1 with those in c2. c1 and c2 must be the same type. swap is usually much faster than copying elements from c2 to c1;
+c1.swap(c2);
+//assignment operations not valid for associative containers or array
+seq.assign(b, e);    //Replaces elements in seq with those in the range denoted by iterators b and e. The iterators b and e must not refer to elements in seq;
+seq.assign(il);    //Replaces the elements in seq with those in the initializer list il;
+seq.assign(n, t);    //Replaces the elements in seq with n elements with value t;
+
+array<int, 10> a1 = {0,1,2,3,4,5,6,7,8,9};
+array<int, 10> a2 = {0}; // elements all have value 0
+a1 = a2; // replaces elements in a1
+a2 = {0}; // error: cannot assign to an array from a braced list
+//Because the size of the right-hand operand might differ from the size of the left-hand operand, the array type does not support assign and it does not allow assignment from a braced list of values.
+
+//Using assign (Sequential Containers Only)
+
+//The assignment operator requires that the left-hand and right-hand operands have the same type. It copies all the elements from the right-hand operand into the left-hand operand. The sequential containers (except array) also define a member named assign that lets us assign from a different but compatible type, or assign from a subsequence of a container. The assign operation replaces all the elements in the left-hand container with (copies of) the elements specified by its arguments.
+
+//list<string> names;
+vector<const char*> oldstyle;
+names = oldstyle; // error: container types don't match
+// ok: can convert from const char*to string
+names.assign(oldstyle.cbegin(), oldstyle.cend());
+//The call to assign replaces the elements in names with copies of the elements in the range denoted by the iterators. The arguments to assign determine how many elements and what values the container will have.
+//Warning:  Because the existing elements are replaced, the iterators passed to assign must not refer to the container on which assign is called.
+
+//A second version of assign takes an integral value and an element value. It replaces the elements in the container with the specified number of elements, each of which has the specified element value.
+
+//Using swap
+
+//The swap operation exchanges the contents of two containers of the same type. After the call to swap, the elements in the two containers are interchanged.
+
+vector<string> svec1(10); // vector with ten elements
+vector<string> svec2(24); // vector with 24 elements
+swap(svec1, svec2);
+//After the swap, svec1 contains 24 string elements and svec2 contains ten. With the exception of arrays, swapping two containers is guaranteed to be fast—the elements themselves are not swapped; internal data structures are swapped.
+
+//Excepting array, swap does not copy, delete, or insert any elements and is guaranteed to run in constant time.
+
+//The fact that elements are not moved means that, with the exception of string, iterators, references, and pointers into the containers are not invalidated. They refer to the same elements as they did before the swap. However, after the swap, those elements are in a different container. For example, had iter denoted the string at position svec1 [3] before the swap, it will denote the element at position svec2[3] after the swap. Differently from the containers, a call to swap on a string may invalidate iterators, references and pointers.
+//Unlike how swap behaves for the other containers, swapping two arrays does exchange the elements. As a result, swapping two arrays requires time proportional to the number of elements in the array.
+//After the swap, pointers, references, and iterators remain bound to the same element they denoted before the swap. Of course, the value of that element has been swapped with the corresponding element in the other array.
+//In the new library, the containers offer both a member and nonmember version of swap. Earlier versions of the library defined only the member version of swap. The nonmember swap is of most importance in generic programs. As a matter of habit, it is best to use the nonmember version of swap.
+
+//9.2.6 Container Size Operations
+//With one exception, the container types have three size-related operations. The size member returns the number of elements in the container; empty returns a bool that is true if size is zero and false otherwise; and max_size returns a number that is greater than or equal to the number of elements a container of that type can contain. For reasons we’ll explain in the next section, forward_list provides max_size and empty, but not size.
+
+//9.2.7 Relational Operators
+
+//Every container type supports the equality operators (== and !=); all the containers except the unordered associative containers also support the relational operators (>, >=, <, <=). The right- and left-hand operands must be the same kind of container and must hold elements of the same type. That is, we can compare a vector<int> only with another vector<int>. We cannot compare a vector<int> with a list<int> or a vector<double>.
+
+//Comparing two containers performs a pairwise comparison of the elements. These operators work similarly to the string relationals:
+//• If both containers are the same size and all the elements are equal, then the two containers are equal; otherwise, they are unequal.
+//• If the containers have different sizes but every element of the smaller one is equal to the corresponding element of the larger one, then the smaller one is less than the other.
+//• If neither container is an initial subsequence of the other, then the comparison depends on comparing the first unequal elements.
+
+//We can use a relational operator to compare two containers only if the appropriate comparison operator is defined for the element type.
+
+//9.3 Sequential Container Operations
+
+//The sequential and associative containers differ in how they organize their elements. These differences affect how elements are stored, accessed, added, and removed.
+
+//9.3.1 Adding Elements to a Sequential Container
+
+//Excepting array, all of the library containers provide flexible memory management. We can add or remove elements dynamically changing the size of the container at run time.
+//Operations that add elements to a sequential container.
+//These operations change the size of the container; they are not supported by array. forward_list has special versions of insert and emplace. push_back and emplace_back not valid for forward_list. push_front and emplace_front not valid for vector or string.
+c.push_back(t);    //Creates an element with value t or constructed from args at the end of c. Returns void;
+c.emplace_back(args);
+c.push_front(t);    //Creates an element with value t or constructed from args on the front of c. Returns void;
+c.emplace_front(args);
+c.insert(p, t);    //Creates an element with value t or constructed from args before the element denoted by iterator p. Returns an iterator referring to the element that was added;
+c.emplace(p, args);
+c.insert(p, n, t);    //Inserts n elements with value t before the element denoted by iterator p. Returns an iterator to the first element inserted; if n is zero, returns p;
+c.insert(p, b, e);    //Inserts the elements from the range denoted by iterators b and e before the element denoted by iterator p. b and e may not refer to elements in c. Returns an iterator to the first element inserted; if the range is empty, returns p;
+c.insert(p, il);    //il is a braced list of element value. Inserts the given values before the element denoted by the iterator p. Returns an iterator to the first inserted element; if the list is empty returns p;
+//Adding elements to a vector, string, or deque potentially invalidates all existing iterators, references, and pointers into the container.
+
+//When we use these operations, we must remember that the containers use different strategies for allocating elements and that these strategies affect performance. Adding elements anywhere but at the end of a vector or string, or anywhere but the beginning or end of a deque, requires elements to be moved. Moreover, adding elements to a vector or a string may cause the entire object to be reallocated. Reallocating an object requires allocating new memory and moving elements from the old space to the new.
+
+//Using push_back
+//Aside from array and forward_list, every sequential container (including the string type) supports push_back.
+//The call to push_back creates a new element at the end of container, increasing the size of container by 1. The value of that element is a copy of word. The type of container can be any of list, vector, or deque.
+//Because string is just a container of characters, we can use push_back to add characters to the end of the string.
+
+//Key Concept: Container Elements Are Copies.
+//When we use an object to initialize a container, or insert an object into a container, a copy of that object’s value is placed in the container, not the object itself. Just as when we pass an object to a nonreference parameter, there is no relationship between the element in the container and the object from which that value originated. Subsequent changes to the element in the container have no effect on the original object, and vice versa.
+
+//Using push_front
+//In addition to push_back, the list, forward_list, and deque containers support an analogous operation named push_front. This operation inserts a new element at the front of the container.
+
+//Note that deque, which like vector offers fast random access to its elements, provides the push_front member even though vector does not. A deque guarantees constant-time insert and delete of elements at the beginning and end of the container. As with vector, inserting elements other than at the front or back of a deque is a potentially expensive operation.
+
+//Adding Elements at a Specific Point in the Container
+//The push_back and push_front operations provide convenient ways to insert a single element at the end or beginning of a sequential container. More generally, the insert members let us insert zero or more elements at any point in the container. The insert members are supported for vector, deque, list, and string. forward_list provides specialized versions of these members.
+//Each of the insert functions takes an iterator as its first argument. The iterator indicates where in the container to put the element(s). It can refer to any position in the container, including one past the end of the container. Because the iterator might refer to a nonexistent element off the end of the container, and because it is useful to have a way to insert elements at the beginning of a container, element(s) are inserted before the position denoted by the iterator.
+
+//It is legal to insert anywhere in a vector, deque, or string. However, doing so can be an expensive operation.
+
+//Inserting a Range of Elements
+
+//The arguments to insert that appear after the initial iterator argument are analogous to the container constructors that take the same parameters. The version that takes an element count and a value adds the specified number of identical elements before the given position:
+
+//When we pass a pair of iterators, those iterators may not refer to the same container as the one to which we are adding elements.
+//Under the new standard, the versions of insert that take a count or a range return an iterator to the first element that was inserted. (In prior versions of the library, these operations returned void.) If the range is empty, no elements are inserted, and the operation returns its first parameter.
+
+//Using the Return from insert
+
+//We can use the value returned by insert to repeatedly insert elements at a specified position in the container:
+list<string> 1st;
+auto iter = 1st.begin();
+while (cin >> word)
+    iter = 1st.insert(iter, word); // same as calling push_front
+//It is important to understand how this loop operates—in particular, to understand why the loop is equivalent to calling push_front.
+
+//Using the emplace Operations
+
+//The new standard introduced three new members—emplace_front, emplace, and emplace_back—that construct rather than copy elements. These operations correspond to the push_front, insert, and push_back operations in that they let us put an element at the front of the container, in front of a given position, or at the back of the container, respectively.
+//When we call a push or insert member, we pass objects of the element type and those objects are copied into the container. When we call an emplace member, we pass arguments to a constructor for the element type. The emplace members use those arguments to construct an element directly in space managed by the container.
+//For example, assuming c holds Sales_data elements:
+// construct a Sales_data object at the end of c
+// uses the three-argument Sales_data constructor
+c.emplace_back("978-0590353403", 25, 15.99);
+// error: there is no version of push_back that takes three arguments
+c.push_back("978-0590353403", 25, 15.99);
+// ok: we create a temporary Sales_data object to pass to push_back
+c.push_back(Sales_data("978-0590353403", 25, 15.99));
+//The emplace functions construct elements in the container. The arguments to these functions must match a constructor for the element type.
+
+//9.3.2 Accessing Elements
+
+//The access operations are undefined if the container has no elements:
+c.back();    //Returns a reference to the last element in c. Undefined if c is empty;
+c.front();    //Returns a reference to the first element in c. Undefined if c is empty;
+c[n];    //Returns a reference to the element indexed by the unsigned integral value n. Undefined if n>=c.size();
+c.at(n);    //Returns a reference to the element indexed by n. If the index is out of range, throws an out_of_range exception;
+//Calling front or back on an empty container, like using a subscript that is out of range, is a serious programming error.
+
+//Each sequential container, including array, has a front member, and all except forward_list also have a back member. These operations return a reference to the first and last element, respectively.
+
+//The Access Members Return References
+
+//The members that access elements in a container (i.e., front, back, subscript, and at) return references. If the container is a const object, the return is a reference to const. If the container is not const, the return is an ordinary reference that we can use to change the value of the fetched element.
+
+//Subscripting and Safe Random Access
+//The index must be “in range,” (i.e., greater than or equal to 0 and less than the size of the container). It is up to the program to ensure that the index is valid; the subscript operator does not check whether the index is in range. Using an out-of-range value for an index is a serious programming error, but one that the compiler will not detect.
+//If we want to ensure that our index is valid, we can use the at member instead. The at member acts like the subscript operator, but if the index is invalid, at throws an out_of_range exception.
+
+//9.3.3 Erasing Elements
+
+//Just as there are several ways to add elements to a (nonarray) container there are also several ways to remove elements.
+//These operations change the size of the container and so are not supported by array. forward_list has a special version of erase. pop_back not valid for forward_list; pop_front not valid for vector and string.
+c.pop_back();    //Removes last element in c. Undefined if c is empty. Returns void;
+c.pop_front();    //Removes first element in c. Undefined if c is empty. Returns void;
+c.erase(p);    //Removes the element denoted by the iterator p and returns an iterator to the element after the one deleted or the off-the-end iterator if p denotes the last element. Undefined if p is the off-the-end iterator;
+c.erase(b, e);    //Removes the range of elements denoted by the iterators b and e. Returns an iterator to the element after the last one that was deleted, or an off-the-end iterator if e is itself an off-the-end iterator;
+c.clear();    //Removes all the elements in c. Returns void;
+//Removing elements anywhere but the beginning or end of a deque invalidates all iterators, references, and pointers. Iterators, references, and pointers to elements after the erasure point in a vector or string are invalidated.
+//Warning: The members that remove elements do not check their argument(s). The programmer must ensure that element(s) exist before removing them.
+
+//The pop_front and pop_back Members 
+//The pop_front and pop_back functions remove the first and last elements, respectively. Just as there is no push_front for vector and string, there is also no pop_front for those types. Similarly, forward_list does not have pop_back. Like the element access members, we may not use a pop operation on an empty container.
+//These operations return void. If you need the value you are about to pop, you must store that value before doing the pop.
+
+//Removing an Element from within the Container
+//The erase members remove element(s) at a specified point in the container. We can delete a single element denoted by an iterator or a range of elements marked by a pair of iterators. Both forms of erase return an iterator referring to the location after the (last) element that was removed.
+
+//Removing Multiple Elements
+//The iterator-pair version of erase lets us delete a range of elements.
+//To delete all the elements in a container, we can either call clear or pass the iterators from begin and end to erase:
+slist.clear(); // delete all the elements within the container
+slist.erase(slist.begin(), slist.end()); // equivalent
+
+//9.3.4 Specialized forward_list Operations
+
+//When we add or remove an element, the element before the one we added or removed has a different successor. To add or remove an element, we need access to its predecessor in order to update that element’s links. However, forward_list is a singly linked list. In a singly linked list there is no easy way to get to an element’s predecessor. For this reason, the operations to add or remove elements in a forward_list operate by changing the element after the given element. That way, we always have access to the elements that are affected by the change.
+//Because these operations behave differently from the operations on the other containers, forward_list does not define insert, emplace, or erase. Instead it defines members named insert_after, emplace_after, and erase_after. For example, in our illustration, to remove elem3, we’d call erase_after on an iterator that denoted elem2. To support these operations, forward_list also defines before_begin, which returns an off-the-beginning iterator. This iterator lets us add or remove elements “after” the nonexistent element before the first one in the list.
+
+//Operations to insert or remove elements in a forward_list
+lst.before_begin();    //Iterator denoting the nonexistent element just before the beginning of the list. This iterator may not be dererenced. cbefore_begin() returns a const_iterator.
+lst.cbefore_begin();
+lst.insert_after(p, t);    //Inserts element(s) after the one denoted by iterator p. t is an object, n is a count, b and e are iterators denoting a range (b and e must not refer to lst), and il is a braced list. Returns an iterator to the last inserted element. If the range is empty, returns p. Undefined if p is the off-the-end iterator;
+lst.insert_after(p, n, t);
+lst.insert_after(p, b, e);
+lst.insert_after(p, il);
+emplace_after(p, args);    //Uses args to construct an element after the one denoted by iterator p. Returns an iterator to the new element. Undefined if p is the off-the-end iterator;
+lst.erase_after(p);    //Removes the element after the one denoted by the iterator p or the range of elements from the one after the iterator b up to but not including the one denoted by e. Returns an iterator to the element after the one deleted, or the off-the-end iterator if there is no such element. Undefined if p denotes the last element in lst or is the off-the-end iterator;
+lst.erase_after(b, e);
+//When we add or remove elements in a forward_list, we have to keep track of two iterators—one to the element we’re checking and one to that element’s predecessor.
+
+forward_list<int> flst = {0,1,2,3,4,5,6,7,8,9};
+auto prev = flst.before_begin(); // denotes element "off the start" of flst
+auto curr = flst.begin(); // denotes the first element in flst
+while (curr != flst.end()) { // while there are still elements to process
+	if (*curr % 2) // if the element is odd
+		curr = flst.erase_after(prev); // erase it and move curr
+	else {
+	prev = curr; // move the iterators to denote the next
+	++curr; // element and one before the next element
+	}
+}
+
+//9.3.5 Resizing the Container
+
+//With the usual exception of arrays, we can use resize to make a container larger or smaller. If the current size is greater than the requested size, elements are deleted from the back of the container; if the current size is less than the new size, elements are added to the back of the container;
+c.resize(n);    //Resize c so that it has n elements. if n<c.size(), the excess elements are discarded. If new elements must be added, they are value initialized;
+c.resize(n, t);    //Resize c to have n elements. Any elements added have value t;
+//If resize shrinks the container, then iterators, references, and pointers to the deleted elements are invalidated; resize on a vector, string, or deque potentially invalidates all iterators, pointers, and references.
+
+//The resize operation takes an optional element-value argument that it uses to initialize any elements that are added to the container. If this argument is absent, added elements are value initialized. If the container holds elements of a class type and resize adds elements, we must supply an initializer or the element type must have a default constructor.
+
+//9.3.6 Container Operations May Invalidate Iterators
+
+//Operations that add or remove elements from a container can invalidate pointers, references, or iterators to container elements. An invalidated pointer, reference, or iterator is one that no longer denotes an element. Using an invalidated pointer, reference, or iterator is a serious programming error that is likely to lead to the same kinds of problems as using an uninitialized pointer.
+
+//After an operation that adds elements to a container
+//• Iterators, pointers, and references to a vector or string are invalid if the container was reallocated. If no reallocation happens, indirect references to elements before the insertion remain valid; those to elements after the insertion are invalid.
+//• Iterators, pointers, and references to a deque are invalid if we add elements anywhere but at the front or back. If we add at the front or back, iterators are invalidated, but references and pointers to existing elements are not.
+//• Iterators, pointers, and references (including the off-the-end and the beforethe- beginning iterators) to a list or forward_list remain valid,
+
+//It should not be surprising that when we remove elements from a container, iterators, pointers, and references to the removed elements are invalidated. After all, those elements have been destroyed. After we remove an element,
+//• All other iterators, references, or pointers (including the off-the-end and the before-the-beginning iterators) to a list or forward_list remain valid.
+//• All other iterators, references, or pointers to a deque are invalidated if the removed elements are anywhere but the front or back. If we remove elements at the back of the deque, the off-the-end iterator is invalidated but other iterators, references, and pointers are unaffected; they are also unaffected if we remove from the front.
+//• All other iterators, references, or pointers to a vector or string remain valid for elements before the removal point. Note: The off-the-end iterator is always invalidated when we remove elements.
+
+//It is a serious run-time error to use an iterator, pointer, or reference that has been invalidated.
+
+//Advice: Managing Iterators
+//When you use an iterator (or a reference or pointer to a container element), it is a good idea to minimize the part of the program during which an iterator must stay valid.
+//Because code that adds or removes elements to a container can invalidate iterators, you need to ensure that the iterator is repositioned, as appropriate, after each operation that changes the container. This advice is especially important for vector, string, and deque.
+
+//Avoid Storing the Iterator Returned from end
+
+//When we add or remove elements in a vector or string, or add elements or remove any but the first element in a deque, the iterator returned by end is always invalidated. Thus, loops that add or remove elements should always call end rather than use a stored copy. Partly for this reason, C++ standard libraries are usually implemented so that calling end() is a very fast operation.
+
+//Tip: Don’t cache the iterator returned from end() in loops that insert or delete elements in a deque, string, or vector.
+
+//9.4 How a vector Grows
+
+//To support fast random access, vector elements are stored contiguously—each element is adjacent to the previous element. Ordinarily, we should not care about how a library type is implemented; all we should care about is how to use it. However, in the case of vectors and strings, part of the implementation leaks into its interface.
+//Given that elements are contiguous, and that the size of the container is flexible, consider what must happen when we add an element to a vector or a string: If there is no room for the new element, the container can’t just add an element somewhere else in memory—the elements must be contiguous. Instead, the container must allocate new memory to hold the existing elements plus the new one, move the elements from the old location into the new space, add the new element, and deallocate the old memory. If vector did this memory allocation and deallocation each time we added an element, performance would be unacceptably slow.
+//To avoid these costs, library implementors use allocation strategies that reduce the number of times the container is reallocated. When they have to get new memory, vector and string implementations typically allocate capacity beyond what is immediately needed. The container holds this storage in reserve and uses it to allocate new elements as they are added. Thus, there is no need to reallocate the container for each new element.
+//This allocation strategy is dramatically more efficient than reallocating the container each time an element is added. In fact, its performance is good enough that in practice a vector usually grows more efficiently than a list or a deque, even though the vector has to move all of its elements each time it reallocates memory.
+
+//Members to Manage Capacity
+
+//The vector and string types provide members that let us interact with the memory-allocation part of the implementation. The capacity operation tells us how many elements the container can hold before it must allocate more space. The reserve operation lets us tell the container how many elements it should be prepared to hold.
+
+//Container Size Management
+//Shrink_to_fit valid only for vector, string, and deque. capacity and reserve valid only for vector and string.
+c.shrink_to_fit();    //Request to reduce capacity() to equal size();
+c.capacity();    //Number of elements c can have before reallocation is necessary;
+c.reserve(n);    //Allocate space for at least n elements;
+//reserve does not change the number of elements in the container; it affects only how much memory the vector preallocates.
+
+//A call to reserve changes the capacity of the vector only if the requested space exceeds the current capacity. If the requested size is greater than the current capacity, reserve allocates at least as much as (and may allocate more than) the requested amount.
+//If the requested size is less than or equal to the existing capacity, reserve does nothing. In particular, calling reserve with a size smaller than capacity does not cause the container to give back memory. Thus, after calling reserve, the capacity will be greater than or equal to the argument passed to reserve.
+//As a result, a call to reserve will never reduce the amount of space that the container uses. Similarly, the resize members change only the number of elements in the container, not its capacity. We cannot use resize to reduce the memory a container holds in reserve.
+//Under the new library, we can call shrink_to_fit to ask a deque, vector, or string to return unneeded memory. This function indicates that we no longer need any excess capacity. However, the implementation is free to ignore this request. There is no guarantee that a call to shrink_to_fit will return memory.
+
+//capacity and size
+//It is important to understand the difference between capacity and size. The size of a container is the number of elements it already holds; its capacity is how many elements it can hold before more space must be allocated.
+
+//Note: Each vector implementation can choose its own allocation strategy. However, it must not allocate new memory until it is forced to do so.
+
+//A vector may be reallocated only when the user performs an insert operation when the size equals capacity or by a call to resize or reserve with a value that exceeds the current capacity. How much memory is allocated beyond the specified amount is up to the implementation.
+//Every implementation is required to follow a strategy that ensures that it is efficient to use push_back to add elements to a vector. Technically speaking, the execution time of creating an n-element vector by calling push_back n times on an initially empty vector must never be more than a constant multiple of n.
+
+//9.5 Additional string Operations
+
+//The string type provides a number of additional operations beyond those common to the sequential containers. For the most part, these additional operations either support the close interaction between the string class and C-style character arrays, or they add versions that let us use indices in place of iterators.
+//The string library defines a great number of functions. Fortunately, these functions use repeated patterns. Given the number of functions supported, this section can be mind-numbing on first reading; so readers might want to skim it. Once you know what kinds of operations are available, you can return for the details when you need to use a particular operation.
+
+//9.5.1 Other Ways to Construct string
+
+//The string type supports three more constructors:
+//Additional Ways to Construct strings
+string s(cp, n);    //s is a copy of the first n characters in the array to which cp points. That array must have at least n characters;
+string s(s2, pos2);    //s is a copy of the characters in the string s2 starting at the index pos2. Undefined if pos2>s2.size();
+string s(s2, pos2, len2);    //s is a copy of len2 characters from s2 starting at the index pos2. Undefined if pos2>s2.size(). Regardless of the value of len2, copies at most se.size()-pos2 characters;
+
+//The constructors that take a string or a const char* take additional (optional) arguments that let us specify how many characters to copy. When we pass a string, we can also specify the index of where to start the copy.
+
+//Ordinarily when we create a string from a const char*, the array to which the pointer points must be null terminated; characters are copied up to the null. If we also pass a count, the array does not have to be null terminated. If we do not pass a count and there is no null, or if the given count is greater than the size of the array, the operation is undefined.
+
+//When we copy from a string, we can supply an optional starting position and a count. The starting position must be less than or equal to the size of the given string. If the position is greater than the size, then the constructor throws an out_of_range exception. When we pass a count, that many characters are copied, starting from the given position. Regardless of how many characters we ask for, the library copies up to the size of the string, but not more.
+
+//The substr Operation
+
+//The substr operation returns a string that is a copy of part or all of the original string. We can pass substr an optional starting position and count.
+
+//substring Operation;
+s.substr(pos, n);    //Return a string containing n characters from s starting at pos. pos default to 0. n defaults to a value that causes the library to copy all the characters in s starting from pos;
+//The substr function throws an out_of_range exception if the position exceeds the size of the string. If the position plus the count is greater than the size, the count is adjusted to copy only up to the end of the string.
+
+//9.5.2 Other Ways to Change a string
+
+//The string type supports the sequential container assignment operators and the assign, insert, and erase operations. It also defines additional versions of insert and erase.
+
+//Operations to Modify strings
+s.insert(pos, args);   //Insert characters specified by args before pos. pos can be an index or an iterator. Versions taking an index return a reference to s; those taking an iterator return an iterator denoting the first inserted character;
+s.erase(pos, len);    //Remove len characters starting at position pos. If len is omitted, removes characters from pos to the end of the s. Returns a reference to s;
+s.assign(args);    //Replace characters in s according to args. Returns a reference to s;
+s.append(args);    //Append args to s. Returns a reference to s;
+s.replace(range, args);    //Remove range of characters from s and replace them with the characters formed by args. range is either an index and a length or a pair of iterators into s. Returns a reference to s;
+//args can be one of the following; append and assign can use all forms str must be distinct from s and the iterators b and e may not refer to s;
+str    //The string str
+str, pos, len    //Up to len characters from str starting at pos
+cp, len    //Up to len characters from the character array point to by cp
+cp    //Null-terminated array pointed to by pointer cp
+n, c    //n copies of character c
+b, e    //Characters in the range formed by iterators b and e
+initializer list    //Comma-separated list of characters enclosed in braces
+//args for replace and insert depend on how range or pos is specified
+
+//In addition to the versions of insert and erase that take iterators, string provides versions that take an index. The index indicates the starting element to erase or the position before which to insert the given values.
+s.insert(s.size(), 5, '!'); // insert five exclamation points at the end of s
+s.erase(s.size() - 5, 5); // erase the last five characters from s
+//The string library also provides versions of insert and assign that take C-style character arrays. For example, we can use a null-terminated character array as the value to insert or assign into a string:
+const char *cp = "Stately, plump Buck";
+s.assign(cp, 7); // s == "Stately"
+s.insert(s.size(), cp + 7); // s == "Stately, plump Buck"
+
+//The string class defines two additional members, append and replace, that can change the contents of a string. The append operation is a shorthand way of inserting at the end.
+//The replace operations are a shorthand way of calling erase and insert.
+
+//The Many Overloaded Ways to Change a string
+
+//The append, assign, insert, and replace functions listed Table 9.13 have several overloaded versions. The arguments to these functions vary as to how we specify what characters to add and what part of the string to change. Fortunately, these functions share a common interface.
+//The assign and append functions have no need to specify what part of the string is changed: assign always replaces the entire contents of the string and append always adds to the end of the string. 
+//The replace functions provide two ways to specify the range of characters to remove. We can specify that range by a position and a length, or with an iterator range. The insert functions give us two ways to specify the insertion point: with either an index or an iterator. In each case, the new element(s) are inserted in front of the given index or iterator.
+//There are several ways to specify the characters to add to the string. The new characters can be taken from another string, from a character pointer, from a brace-enclosed list of characters, or as a character and a count. When the characters come from a string or a character pointer, we can pass additional arguments to control whether we copy some or all of the characters from the argument.
+//Not every function supports every version of these arguments. For example, there is no version of insert that takes an index and an initializer list. Similarly, if we want to specify the insertion point using an iterator, then we cannot pass a character pointer as the source for the new characters.
+
+//9.5.3 string Search Operations
+
+//The string class provides six different search functions, each of which has four overloaded versions. Table below describes the search members and their arguments. Each of these search operations returns a string::size_type value that is the index of where the match occurred. If there is no match, the function returns a static member named string::npos. The library defines npos as a const string::size_type initialized with the value -1. Because npos is an unsigned type, this initializer means npos is equal to the largest possible size any string could have.
+
+//string Search Operations
+//search operations return the index of the desired character or npos if not found
+s.find(args);    //Find the first occurrence of args in s;
+s.rfind(args);    //Find the last occurrence of args in s;
+s.find_first_of(args);    //Find the first occurrence of any charecter from args in s;
+s.find_last_of(args);    //Find the last occurrence of any character from args in s;
+s.find_first_not_of(args);    //Find the first character in s that is not in args;
+s.find_last_not_of(args);    //Find the last character in s that is not in args;
+//args must be one of:
+c, pos    //Look for the character c starting at position pos in s. pos defaults to 0;
+s2, pos    //Look for the string s2 starting at position pos in s. pos defaults to 0;
+cp, pos    //Look for the C-style null-terminated string pointed to by the pointer cp. Start looking at position pos in s. pos defaults to 0;
+cp, pos, n    //Look for the first n characters in the array pointed to by the pointer cp. Start looking at position pos in s. No default for pos or n;
+//Warning: The string search function return string::size_type, which is an unsigned type. As a result, it is a bad idea to use an int, or other signed type, to hold the return from these functions.
+
+//Instead of looking for a match, we might call find_first_not_of to find the first position that is not in the search argument.
+
+//Specifying Where to Start Search
+
+//We can pass an optional starting position to the find operations. This optional argument indicates the position from which to start the search. By default, that position is set to zero. One common programming pattern uses this optional argument to loop through a string finding all occurrences:
+string::size_type pos = 0;
+// each iteration finds the next number in name
+while ((pos = name.find_first_of(numbers, pos)) != string::npos) {
+	cout << "found number at index: " << pos
+		 << " element is " << name[pos] << endl;
+	++pos; // move to the next character
+}
+
+//Searching Backward
+
+//The find operations we’ve used so far execute left to right. The library provides analogous operations that search from right to left. The rfind member searches for the last—that is, right-most—occurrence of the indicated substring.
+
+//Similarly, the find_last functions behave like the find_first functions, except that they return the last match rather than the first:
+//• find_last_of searches for the last character that matches any element of the search string.
+//• find_last_not_of searches for the last character that does not match any element of the search string.
+//Each of these operations takes an optional second argument indicating the position within the string to begin searching.
+
+//9.5.4 The compare Functions
+
+//In addition to the relational operators, the string library provides a set of compare functions that are similar to the C library strcmp function. Like strcmp, s.compare returns zero or a positive or negative value depending on whether s is equal to, greater than, or less than the string formed from the given arguments.
+
+//There are six versions of compare. The arguments vary based on whether we are comparing two strings or a string and a character array. In both cases, we might compare the entire string or a portion thereof.
+s2;    //Compare s to s2;
+pos1, n1, s2;    //Compares n1 characters starting at pos1 from s to s2;
+pos1, n1, s2, pos2, n2;    //Compares n1 characters starting at pos1 from s to the n2 characters starting at pos2 in s2;
+cp;    //Compares s to the null-terminated array pointed to by cp;
+pos1, n1, cp;    //Compares n1 characters starting at pos1 from s to cp;
+pos1, n1, cp, n2;    //Compares n1 characters starting at pos1 from s to n2 characters starting from the pointer cp;
+
+//9.5.5 Numeric Conversions
+
+
+
+
+
+
+
+
+
