@@ -601,6 +601,30 @@ pos1, n1, cp, n2;    //Compares n1 characters starting at pos1 from s to n2 char
 
 //9.5.5 Numeric Conversions
 
+//Strings often contain characters that represent numbers. For example, we represent the numeric value 15 as a string with two characters, the character '1' followed by the character '5'. In general, the character representation of a number differs from its numeric value. The numeric value 15 stored in a 16-bit short has the bit pattern 0000000000001111, whereas the character string "15" represented as two Latin-1 chars has the bit pattern 0011000100110101. The first byte represents the character '1' which has the octal value 061, and the second byte represents '5', which in Latin-1 is octal 065.
+
+//The new standard introduced several functions that convert between numeric data and library string.
+int i = 42;
+string s = to_string(i); // converts the int i to its character representation
+double d = stod(s);    //converts the string s to floating-point
+
+//Conversions between strings and Numbers
+to_string(val);    //Overloaded functions returning the string representation of val. val can be any arithmetic type. There are versions of to_string for each floating-point type and integral  type that is int or larger. Small integral types are promoted as usual;
+stoi(s, p, b);    //Return the initial substring of s that has numeric content as an int, long, unsigned long, long long, unsigned long long, respectively. b indicates the numeric base to use for the conversion; b defaults to 10. p is a pointer to a size_t in which to put the index of the first nonnumeric character in s; p defaults to 0, in which case the function does not store the index;
+stol(s, p, b);
+stoul(s, p, b);
+stoull(s, p, b);
+stof(s, p);    //Return the initial numeric substring in s as a float, double, or long double, respectively. p has the same behavior as described for the integer conversions;
+stod(s, p);
+stold(s, p);
+
+//The first non-whitespace character in the string must be a sign (+ or -) or a digit. The string can begin with 0x or 0X to indicate hexadecimal. For the functions that convert to floating-point the string may also start with a decimal point (.) and may contain an e or E to designate the exponent. For the functions that convert to integral type, depending on the base, the string can contain alphabetic characters corresponding to numbers beyond the digit 9.
+
+//Note: If the string can't be converted to a number, these functions throw an invalid_argument exception. If the conversion generates a value that can't be represented, they throw out_of_range.
+
+//9.6 Container Adaptors
+
+
 
 
 
