@@ -624,12 +624,56 @@ stold(s, p);
 
 //9.6 Container Adaptors
 
+//In addition to the sequential containers, the library defines three sequential container adaptors: stack, queue, and priority_queue. An adaptor is a general concept in the library. There are container, iterator, and function adaptors. Essentially, an adaptor is a mechanism for making one thing act like another. A container adaptor takes an existing container type and makes it act like a different type. For example, the stack adaptor takes a sequential container (other than array or forward_list) and makes it operate as if it were a stack.
 
+//Operations and Types Common to the Container Adaptors
+size_type;    //Type large enough to hold the size of the largest object of this type;
+value_type;    //Element type;
+container_type;    //Type of the underlying container on which the adaptor is implemented;
+A a;    //Create a new empty adaptor named a;
+A a(C);    //Create a new adaptor named a with a copy of the container C;
+relational operators;    //Each adaptor supports all the relational operators: ==, !=, <, <=, >, >=. These operators return the result of comparing the underlying containers;
+a.empty();    //false if a has any elements, true otherwise;
+a.size();    //Number of elements in a;
+swap(a, b);    //Swaps the contents of a and b; a and b must have the same type, including the type of the container on which they are implemented;
+a.swap(b);
 
+//Defining and Adaptor
 
+//Each adaptor defines two constructors: the default constructor that creates an empty object, and a constructor that takes a container and initializes the adaptor by copying the given container. For example, assuming that deq is a deque<int>, we can use deq to initialize a new stack as follows:
+stack<int> stk(deq); // copies elements from deq into stk
+//By default both stack and queue are implemented in terms of deque, and a priority_queue is implemented on a vector. We can override the default container type by naming a sequential container as a second type argument when we create the adaptor:
+// empty stack implemented on top of vector
+stack<string, vector<string>> str_stk;
+// str_stk2 is implemented on top of vector and initially holds a copy of svec
+stack<string, vector<string>> str_stk2(svec);
 
+//There are constraints on which containers can be used for a given adaptor. All of the adaptors require the ability to add and remove elements. As a result, they cannot be built on an array. Similarly, we cannot use forward_list, because all of the adaptors require operations that add, remove, or access the last element in the container. A stack requires only push_back, pop_back, and back operations, so we can use any of the remaining container types for a stack. The queue adaptor requires back, push_back, front, and push_front, so it can be built on a list or deque but not on a vector. A priority_queue requires random access in addition to the front, push_back, and pop_back operations; it can be built on a vector or a deque but not on a list. 
 
+//Stack Adaptor
 
+//The stack type is defined in the stack header. The operations provided by a stack are listed below.
+//Uses deque by default; can be implemented on a list or vector as well;
+s.pop();    //Removes, but does not return, the top element from the stack;
+s.push(item);    //Creates a new top element on the stack by copying or moving item, or by constructing the element from args;
+s.emplace(args); 
+s.top();    //Returns, but does not remove, the top element on the stack;
 
+//Each container adaptor defines its own operations in terms of operations provided by the underlying container type. We can use only the adaptor operations and cannot use the operations of the underlying container type. For example,
+intStack.push(ix); // intStackholds 0 ... 9 inclusive
+//calls push_back on the deque object on which intStack is based. Although stack is implemented by using a deque, we have no direct access to the deque operations. We cannot call push_back on a stack; instead, we must use the stack operation named push.
 
+//The Queue Adaptors
 
+//The queue and priority_queue adaptors are defined in the queue header.
+//queue, priority_queue Operations
+//By default queue uses deque and priority_queue uses vector; queue can use a list or vector as well, priority_queue can use a deque;
+q.pop();    //Remove, but does not return, the front element or highest-priority element from the queue or priority_queue, respectively;
+q.front();    //Returns, but does not remove, the front or back element of q;
+q.back();    //Valid only for queue;
+q.top();    //Returns, but does not remove, the highest-priority element. Valid only for priority_queue;
+q.push(item);    //Create an element with value item or constructed from args at the end of the queue or in its appropriate position in priority_queue;
+
+//The library queue uses a first-in, first-out (FIFO) storage and retrieval policy. Objects entering the queue are placed in the back and objects leaving the queue are removed from the front. A restaurant that seats people in the order in which they arrive is an example of a FIFO queue.
+
+//A priority_queue lets us establish a priority among the elements held in the queue. Newly added elements are placed ahead of all the elements with a lower priority. A restaurant that seats people according to their reservation time, regardless of when they arrive, is an example of a priority queue. By default, the library uses the < operator on the element type to determine relative priorities.
