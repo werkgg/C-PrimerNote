@@ -235,6 +235,41 @@ cout << endl;
 
 //10.3.3 Lambda Captures and Returns
 
+//When we define a lambda, the compiler generates a new (unnamed) class type that corresponds to that lambda. We’ll see how these classes are generated in § 14.8.1 (p. 572). For now, what’s useful to understand is that when we pass a lambda to a function, we are defining both a new type and an object of that type: The argument is an unnamed object of this compiler-generated class type. Similarly, when we use auto to define a variable initialized by a lambda, we are defining an object of the type generated from that lambda.
+//By default, the class generated from a lambda contains a data member corresponding to the variables captured by the lambda. Like the data members of any class, the data members of a lambda are initialized when a lambda object is created.
+
+//Capture by Value
+//Similar to parameter passing, we can capture variables by value or by reference. Table below covers the various ways we can form a capture list. So far, our lambdas have captured variables by value. As with a parameter passed by value, it must be possible to copy such variables. Unlike parameters, the value of a captured variable is copied when the lambda is created, not when it is called:
+void fcn1() {
+	size_t v1 = 42;    //local variable
+    //copies v1 into the callable object named f
+    auto f = [v1] {return v1;};
+    v1 = 0;
+    auto j = f();    //j is 42; f stored a copy of v1 when we created it
+}
+//Because the value is copied when the lambda is created, subsequent changes to a captured variable have no effect on the corresponding value inside the lambda.
+
+//Lambda Capture List
+[];    //Empty capture list. The lambda may not use variables from the enclosing function. A lambda may use local variables only if it captures them;
+[name];    //names is a comma-separated list of names local to the enclosing function. By default, variables in the capture list are copied. A name preceded by & is captured by reference;
+[&];    //Implicit by reference capture list. Entities from the enclosing function used in the lambda body are used by reference;
+[=];    //Implicit by value capture list. Entities from the enclosing function used in the lambda body are copied into the lambda body;
+[&, identifier_list];    //identifier_list is a comma-separated list of zero or more variables from the enclosing function. These variables are captured by value; any implicitly captured variables are captured by reference. The name in identifier_list must not be preceded by an &;
+[=, reference_list];    //Variables included in the reference_list are captured by reference; any implicitly captured variables are captured by value. The names in reference_list may not include this and must be preceded by an &;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
