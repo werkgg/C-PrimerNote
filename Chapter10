@@ -1,0 +1,244 @@
+//Chapter10 Generic Algorithms
+
+//10.1 Overview
+
+//Most of the algorithms are defined in the algorithm header. The library also defines a set of generic numeric algorithms that are defined in the numeric header.
+//In general, the algorithms do not work directly on a container. Instead, they operate by traversing a range of elements bounded by two iterators. Typically, as the algorithm traverses the range, it does something with each element.
+
+//How the Algorithms Work
+
+//To see how the algorithms can be used on varying types of containers, let’s look a bit more closely at find. Its job is to find a particular element in an unsorted sequence of elements. Conceptually, we can list the steps find must take:
+//1. It accesses the first element in the sequence.
+//2. It compares that element to the value we want.
+//3. If this element matches the one we want, find returns a value that identifies/this element.
+//4. Otherwise, find advances to the next element and repeats steps 2 and 3.
+//5. find must stop when it has reached the end of the sequence.
+//6. If find gets to the end of the sequence, it needs to return a value indicating that the element was not found. This value and the one returned from step 3 must have compatible types.
+//None of these operations depends on the type of the container that holds the/elements. So long as there is an iterator that can be used to access the elements,/find doesn’t depend in any way on the container type (or even whether the elements/are stored in a container).
+
+//Key Concept: Algorithms Never Execute Container Operations
+//The generic algorithms do not themselves execute container operations. They operate solely in terms of iterators and iterator operations. The fact that the algorithms operate in terms of iterators and not container operations has a perhaps surprising but essential implication: Algorithms never change the size of the underlying container. Algorithms may change the values of the elements stored in the container, and they may move elements around within the container. They do not, however, ever add or remove elements directly.
+//As we’ll see in § 10.4.1 (p. 401), there is a special class of iterator, the inserters, that do more than traverse the sequence to which they are bound. When we assign to these iterators, they execute insert operations on the underlying container. When an algorithm operates on one of these iterators, the iterator may have the effect of adding elements to the container. The algorithm itself, however, never does so.
+
+//10.2 A First Look at the Algorithms
+
+//The library provides more than 100 algorithms. Fortunately, like the containers, the algorithms have a consistent architecture. Understanding this architecture makes learning and using the algorithms easier than memorizing all 100+ of them. In this chapter, we’ll illustrate how to use the algorithms, and describe the unifying principles that characterize them. Appendix A lists all the algorithms classified by how they operate.
+//With only a few exceptions, the algorithms operate over a range of elements. We’ll refer to this range as the “input range.” The algorithms that take an input range always use their first two parameters to denote that range. These parameters are iterators denoting the first and one past the last elements to process.
+//Although most algorithms are similar in that they operate over an input range, they differ in how they use the elements in that range. The most basic way to understand the algorithms is to know whether they read elements, write elements, or rearrange the order of the elements.
+
+//10.2.1 Read-Only Algorithms
+
+//A number of the algorithms read, but never write to, the elements in their input range. The find function is one such algorithm.
+//Another read-only algorithm is accumulate, which is defined in the numeric header. The accumulate function takes three arguments. The first two specify a range of elements to sum. The third is an initial value for the sum.
+
+//Note: The type of the third argument to accumulate determines which addition operator is used and is the type that accumulate returns.
+//Best Practices: Ordinarily it is best to use cbegin() and cend() with algorithms that read, but do not write, the elements. However, if you plan to use the iterator returned by the algorithm to change an element’s value, then you need to pass begin() and end().
+
+//Algorithms that Operate on Two Sequences
+
+//Another read-only algorithm is equal, which lets us determine whether two sequences hold the same values. It compares each element from the first sequence to the corresponding element in the second. It returns true if the corresponding elements are equal, false otherwise. The algorithm takes three iterators: The first two (as usual) denote the range of elements in the first sequence; the third denotes the first element in the second sequence:
+// roster2 should have at least as many elements as roster1
+equal(roster1.cbegin(), roster1.cend(), roster2.cbegin());
+//Because equal operates in terms of iterators, we can call equal to compare elements in containers of different types. Moreover, the element types also need not be the same so long as we can use == to compare the element types. For example, roster1 could be a vector<string> and roster2 a list<const char*>.
+//However, equal makes one critically important assumption: It assumes that the second sequence is at least as big as the first. This algorithm potentially looks at every element in the first sequence. It assumes that there is a corresponding element for each of those elements in the second sequence.
+
+//Warning: Algorithms that take a single iterator denoting a second sequence assume that the second sequence is at least as large at the first.
+
+//10.2.2 Algorithms that Write Container Elements
+
+//Some algorithms assign new values to the elements in a sequence. When we use an algorithm that assigns to elements, we must take care to ensure that the sequence into which the algorithm writes is at least as large as the number of elements we ask the algorithm to write. Remember, algorithms do not perform container operations, so they have no way themselves to change the size of a container.
+//Some algorithms write to elements in the input range itself. These algorithms are not inherently dangerous because they write only as many elements as are in the specified range.
+//As one example, the fill algorithm takes a pair of iterators that denote a range and a third argument that is a value. fill assigns the given value to each element in the input sequence:
+fill(vec.begin(), vec.end(), 0); // reset each element to 0
+// set a subsequence of the container to 10
+fill(vec.begin(), vec.begin() + vec.size()/2, 10);
+//Because fill writes to its given input sequence, so long as we pass a valid input sequence, the writes will be safe.
+
+//Key Concept: Iterator Arguments 
+//Some algorithms read elements from two sequences. The elements that constitute these sequences can be stored in different kinds of containers. For example, the first sequence might be stored in a vector and the second might be in a list, a deque, a built-in array, or some other sequence. Moreover, the element types in the two sequences are not required to match exactly. What is required is that we be able to compare elements from the two sequences. For example, in the equal algorithm, the element types need not be identical, but we do have to be able to use == to compare elements from the two sequences.
+//Algorithms that operate on two sequences differ as to how we pass the second sequence. Some algorithms, such as equal, take three iterators: The first two denote the range of the first sequence, and the third iterator denotes the first element in the second sequence. Others take four iterators: The first two denote the range of elements in the first sequence, and the second two denote the range for the second sequence.
+//Algorithms that use a single iterator to denote the second sequence assume that the second sequence is at least as large as the first. It is up to us to ensure that the algorithm will not attempt to access a nonexistent element in the second sequence. For example, the equal algorithm potentially compares every element from its first sequence to an element in the second. If the second sequence is a subset of the first, then our program has a serious error—equal will attempt to access elements beyond the end of the second sequence.
+
+//Algorithms do not Check Write Operations
+
+//Some algorithms take an iterator that denotes a separate destination. These algorithms assign new values to the elements of a sequence starting at the element denoted by the destination iterator. For example, the fill_n function takes a single iterator, a count, and a value. It assigns the given value to the specified number of elements starting at the element denoted to by the iterator. We might use fill_n to assign a new value to the elements in a vector:
+vector<int> vec; // empty vector
+// use vec giving it various values
+fill_n(vec.begin(), vec.size(), 0); // reset all the elements of vec to 0
+//The fill_n function assumes that it is safe to write the specified number of elements. That is, for a call of the form
+fill_n(dest, n, val)
+//fill_n assumes that dest refers to an element and that there are at least n elements in the sequence starting from dest.
+//It is a fairly common beginner mistake to call fill_n (or similar algorithms that write to elements) on a container that has no elements:
+vector<int> vec; // empty vector
+// disaster: attempts to write to ten (nonexistent) elements in vec
+fill_n(vec.begin(), 10, 0);
+//This call to fill_n is a disaster. We specified that ten elements should be written, but there are no such elements—vec is empty. The result is undefined.
+
+//Warning: Algorithms that write to a destination iterator assume the destination is large enough to hold the number of elements being written.
+
+//Introducing back_inserter
+
+//One way to ensure that an algorithm has enough elements to hold the output is to use an insert iterator. An insert iterator is an iterator that adds elements to a container. Ordinarily, when we assign to a container element through an iterator, we assign to the element that iterator denotes. When we assign through an insert iterator, a new element equal to the right-hand value is added to the container.
+//We’ll have more to say about insert iterators in § 10.4.1 (p. 401). However, in order to illustrate how to use algorithms that write to a container, we will use back_inserter, which is a function defined in the iterator header.
+//back_inserter takes a reference to a container and returns an insert iterator bound to that container. When we assign through that iterator, the assignment calls push_back to add an element with the given value to the container:
+
+vector<int> vec;    //empty vector;
+auto it=back_inserter(vec);    //assigning through it adds elements to vec;
+*it=42;    //vec now has one element with value 42;
+//We frequently use back_inserter to create an iterator to use as the destination of an algorithm. For example:
+vector<int> vec; // empty vector
+// ok: back_inserter creates an insert iterator that adds elements to vec
+fill_n(back_inserter(vec), 10, 0); // appends ten elements to vec
+//On each iteration, fill_n assigns to an element in the given sequence. Because we passed an iterator returned by back_inserter, each assignment will call push_back on vec. As a result, this ca
+
+//Copy Algorithms
+
+//The copy algorithm is another example of an algorithm that writes to the elements of an output sequence denoted by a destination iterator. This algorithm takes three iterators. The first two denote an input range; the third denotes the beginning of the destination sequence. This algorithm copies elements from its input range into elements in the destination. It is essential that the destination passed to copy be at least as large as the input range.
+//As one example, we can use copy to copy one built-in array to another:
+int a1[] = {0,1,2,3,4,5,6,7,8,9};
+int a2[sizeof(a1)/sizeof(*a1)]; // a2 has the same size as a1
+// ret points just past the last element copied into a2
+auto ret = copy(begin(a1), end(a1), a2); // copy a1 into a2
+//Here we define an array named a2 and use sizeof to ensure that a2 has as many elements as the array a1. We then call copy to copy a1 into a2. After the call to copy, the elements in both arrays have the same values.
+//The value returned by copy is the (incremented) value of its destination iterator. That is, ret will point just past the last element copied into a2.
+//Several algorithms provide so-called “copying” versions. These algorithms compute new element values, but instead of putting them back into their input sequence, the algorithms create a new sequence to contain the results.
+//For example, the replace algorithm reads a sequence and replaces every instance of a given value with another value. This algorithm takes four parameters: two iterators denoting the input range, and two values. It replaces each element that is equal to the first value with the second:
+// replace any element with the value 0 with 42
+replace(ilst.begin(), ilst.end(), 0, 42);
+//This call replaces all instances of 0 by 42. If we want to leave the original sequence unchanged, we can call replace_copy. That algorithm takes a third iterator argument denoting a destination in which to write the adjusted sequence:
+// use back_inserter to grow destination as needed
+replace_copy(ilst.cbegin(), ilst.cend(),
+back_inserter(ivec), 0, 42);
+//After this call, ilst is unchanged, and ivec contains a copy of ilst with the exception that every element in ilst with the value 0 has the value 42 in ivec.
+
+//10.2.3 Algorithms that Reorder Container Elements
+
+//Some algorithms rearrange the order of elements within a container. An obvious example of such an algorithm is sort. A call to sort arranges the elements in the input range into sorted order using the element type’s < operator.
+
+//To eliminate the duplicated words, we will first sort the vector so that duplicated words appear adjacent to each other. Once the vector is sorted, we can use another library algorithm, named unique, to reorder the vector so that the unique elements appear in the first part of the vector. Because algorithms cannot do container operations, we’ll use the erase member of vector to actually remove the elements:
+void elimDups(vector<string> &words){
+	// sort words alphabetically so we can find the duplicates
+	sort(words.begin(), words.end());
+	// unique reorders the input range so that each word appears once in the front portion of the range and returns an iterator one past the unique range
+	auto end_unique = unique(words.begin(), words.end());
+	// erase uses a vector operation to remove the nonunique elements
+	words.erase(end_unique, words.end());
+}
+
+//The unique algorithm rearranges the input range to “eliminate” adjacent duplicated entries, and returns an iterator that denotes the end of the range of the unique values.
+//The size of words is unchanged; it still has ten elements. The order of those elements is changed—the adjacent duplicates have been “removed.” We put remove in quotes because unique doesn’t remove any elements. Instead, it overwrites adjacent duplicates so that the unique elements appear at the front of the sequence. The iterator returned by unique denotes one past the last unique element. The elements beyond that point still exist, but we don’t know what values they have.
+
+//Note: The library algorithms operate on iterators, not containers. Therefore, an algorithm cannot (directly) add or remove elements.
+
+//10.3 Customizing Operations
+
+//Many of the algorithms compare elements in the input sequence. By default, such algorithms use either the element type’s < or == operator. The library also defines versions of these algorithms that let us supply our own operation to use in place of the default operator.
+//For example, the sort algorithm uses the element type’s < operator. However, we might want to sort a sequence into a different order from that defined by <, or our sequence might have elements of a type (such as Sales_data) that does not have a < operator. In both cases, we need to override the default behavior of sort.
+
+//10.3.1 Passing a Function on to Algorithm
+
+//As one example, assume that we want to print the vector after we call elimDups. However, we’ll also assume that we want to see the words ordered by their size, and then alphabetically within each size. To reorder the vector by length, we’ll use a second, overloaded version of sort. This version of sort takes a third argument that is a predicate.
+
+//Predicates
+
+//A predicate is an expression that can be called and that returns a value that can be used as a condition. The predicates used by library algorithms are either unary predicates (meaning they have a single parameter) or binary predicates (meaning they have two parameters). The algorithms that take predicates call the given predicate on the elements in the input range. As a result, it must be possible to convert the element type to the parameter type of the predicate.
+
+//The version of sort that takes a binary predicate uses the given predicate in place of < to compare elements. The predicates that we supply to sort must meet the requirements that we’ll describe in. For now, what we need to know is that the operation must define a consistent order for all possible elements in the input sequence. Our isShorter function from is an example of a function that meets these requirements, so we can pass isShorter to sort. Doing so will reorder the elements by size:
+// comparison function to be used to sort by word length
+bool isShorter(const string &s1, const string &s2) {
+	return s1.size() < s2.size();
+}
+// sort on word length, shortest to longest
+sort(words.begin(), words.end(), isShorter);
+//If words contains the same data as in § 10.2.3 (p. 384), this call would reorder words so that all the words of length 3 appear before words of length 4, which in turn are followed by words of length 5, and so on.
+
+//Sorting Algorithms
+
+//When we sort words by size, we also want to maintain alphabetic order among the elements that have the same length. To keep the words of the same length in alphabetical order we can use the stable_sort algorithm. A stable sort maintains the original order among equal elements.
+//Ordinarily, we don’t care about the relative order of equal elements in a sorted sequence. After all, they’re equal. However, in this case, we have defined “equal” to mean “have the same length.” Elements that have the same length still differ from one another when we view their contents. By calling stable_sort, we can maintain alphabetical order among those elements that have the same length:
+elimDups(words); // put words in alphabetical order and remove duplicates
+// resort by length, maintaining alphabetical order among words of the same length
+stable_sort(words.begin(), words.end(), isShorter);
+for (const auto &s : words) // no need to copy the strings
+	cout << s << " "; // print each element separated by a space
+cout << endl;
+
+//10.3.2 Lambda Expressions
+
+//The predicates we pass to an algorithm must have exactly one or two parameters, depending on whether the algorithm takes a unary or binary predicate, respectively. However, sometimes we want to do processing that requires more arguments than the algorithm’s predicate allows. For example, the solution you wrote for the last exercise in the previous section had to hard-wire the size 5 into the predicate used to partition the sequence. It would be move useful to be able to partition a sequence without having to write a separate predicate for every possible size.
+
+//We can use the library find_if algorithm to find an element that has a particular size. Like find, the find_if algorithm takes a pair of iterators denoting a range. Unlike find, the third argument to find_if is a predicate. The find_if algorithm calls the given predicate on each element in the input range. It returns the first element for which the predicate returns a nonzero value, or its end iterator if no such element is found.
+
+//It would be easy to write a function that takes a string and a size and returns a bool indicating whether the size of a given string is greater than the given size. However, find_if takes a unary predicate—any function we pass to find_if must have exactly one parameter that can be called with an element from the input sequence. There is no way to pass a second argument representing the size. To solve this part of our problem we’ll need to use some additional language facilities.
+
+//Introducing Lambdas
+
+//We can pass any kind of callable object to an algorithm. An object or expression is callable if we can apply the call operator to it. That is, if e is a callable expression, we can write e(args) where args is a comma-separated list of zero or more arguments.
+//The only callables we’ve used so far are functions and function pointers. There are two other kinds of callables: classes that overload the function-call operator, which we’ll cover in § 14.8 (p. 571), and lambda expressions.
+//A lambda expression represents a callable unit of code. It can be thought of as an unnamed, inline function. Like any function, a lambda has a return type, a parameter list, and a function body. Unlike a function, lambdas may be defined inside a function. A lamba expression has the form
+[capture list] (parameter list) -> return type { function body }
+//where capture list is an (often empty) list of local variables defined in the enclosing function; return type, parameter list, and function body are the same as in any ordinary function. However, unlike ordinary functions, a lambda must use a trailing return to specify its return type.
+
+//We can omit either or both of the parameter list and return type but must always include the capture list and function body:
+auto f = [] { return 42; };
+//Here, we’ve defined f as a callable object that takes no arguments and returns 42.
+//We call a lambda the same way we call a function by using the call operator:
+cout << f() << endl; // prints 42
+//Omitting the parentheses and the parameter list in a lambda is equivalent specifying an empty parameter list. Hence, when we call f, the argument list is empty. If we omit the return type, the lambda has an inferred return that depends on the code in the function body. If the function body is just a return statement, the return type is inferred from the type of the expression that is returned. Otherwise, the return type is void.
+
+//Note: Lambdas with function bodies that contain anything other than a single return statement that do not specify a return type return void.
+
+//Passing Arguments to a Lambda
+
+//As with an ordinary function call, the arguments in a call to a lambda are used to initialize the lambda’s parameters. As usual, the argument and parameter types must match. Unlike ordinary functions, a lambda may not have default arguments. Therefore, a call to a lambda always has as many arguments as the lambda has parameters. Once the parameters are initialized, the function body executes.
+//As an example of a lambda that takes arguments, we can write a lambda that behaves like our isShorter function:
+[](const string &a, const string &b) { return a.size() < b.size();}
+
+//The empty capture list indicates that this lambda will not use any local variables from the surrounding function. The lambda’s parameters, like the parameters to isShorter, are references to const string. Again like isShorter, the lambda’s function body compares its parameters’ size()s and returns a bool that depends on the relative sizes of the given arguments.
+//We can rewrite our call to stable_sort to use this lambda as follows:
+// sort words by size, but maintain alphabetical order for words of the same size
+stable_sort(words.begin(), words.end(),
+            [](const string &a, const string &b) { return a.size() < b.size();});
+//When stable_sort needs to compare two elements, it will call the given lambda expression.
+
+//Using the Capture List
+
+//We’re now ready to solve our original problem, which is to write a callable expression that we can pass to find_if. We want an expression that will compare the length of each string in the input sequence with the value of the sz parameter in the biggies function.
+//Although a lambda may appear inside a function, it can use variables local to that function only if it specifies which variables it intends to use. A lambda specifies the variables it will use by including those local variables in its capture list. The capture list directs the lambda to include information needed to access those variables within the lambda itself.
+//In this case, our lambda will capture sz and will have a single string parameter. The body of our lambda will compare the given string’s size with the captured value of sz:
+[sz](const string &a) { return a.size() >= sz; };
+//Inside the [] that begins a lambda we can provide a comma-separated list of names defined in the surrounding function.
+//Because this lambda captures sz, the body of the lambda may use sz. The lambda does not capture words, and so has no access to that variable. Had we given our lambda an empty capture list, our code would not compile:
+// error: sz not captured
+[](const string &a) { return a.size() >= sz; };
+
+//Note: A lambda may use a variable local to its surrounding function only if the lambda captures that variable in its capture list.
+
+//Calling find_if
+
+//Using this lambda, we can find the first element whose size is at least as big as sz:
+// get an iterator to the first element whose size() is >= sz
+auto wc = find_if(words.begin(), words.end(),
+				  [sz](const string &a) { return a.size() >= sz; });
+//The call to find_if returns an iterator to the first element that is at least as long as the given sz, or a copy of words.end() if no such element exists.
+
+//The for_each Algorithm
+
+//The last part of our problem is to print the elements in words that have length sz or greater. To do so, we’ll use the for_each algorithm. This algorithm takes a callable object and calls that object on each element in the input range:
+// print words of the given size or longer, each one followed by a space
+for_each(wc, words.end(), [](const string &s){cout << s << " ";});
+cout << endl;
+//The capture list in this lambda is empty, yet the body uses two names: its own parameter, named s, and cout.
+//The capture list is empty, because we use the capture list only for (nonstatic) variables defined in the surrounding function. A lambda can use names that are defined outside the function in which the lambda appears. In this case, cout is not a name defined locally in biggies; that name is defined in the iostream header. So long as the iostream header is included in the scope in which biggies appears, our lambda can use cout.
+
+//Note: The capture list is  used for local nonstatic variables only; lambdas can use local statics and variables declared outside the function directly.
+
+//10.3.3 Lambda Captures and Returns
+
+
+
+
+
+
+
+
