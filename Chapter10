@@ -546,21 +546,174 @@ while (item_iter != eof) {
 }
 out_iter = sum; // remember to print the last set of records
 
+//Exercise10.33
+//  Write a program that takes the names of an input file and two output files.
+//  The input file should hold integers. Using an istream_iterator read the input file.
+//  Using ostream_iterators, write the odd numbers into the first output file.
+//  Each value should be followed by a space.Write the even numbers into the second file.
+//  Each of these values should be placed on a separate line.
+//
+//  Run: ./a.out "../data/input.txt" "../data/odd.txt" "../data/even.txt"
 
+#include <fstream>
+#include <iterator>
+#include <algorithm>
 
+int main(int argc, char **argv)
+{
+    if (argc != 4) return -1;
 
+    std::ifstream ifs(argv[1]);
+    std::ofstream ofs_odd(argv[2]), ofs_even(argv[3]);
 
+    std::istream_iterator<int> in(ifs), in_eof;
+    std::ostream_iterator<int> out_odd(ofs_odd, " "), out_even(ofs_even, "\n");
 
+    std::for_each(in, in_eof, [&out_odd, &out_even](const int i){
+        *(i & 0x1 ? out_odd : out_even)++ = i;
+    });
 
+    return 0;
+}
 
+//10.4.3 Reverse Iterators
 
+//A reverse iterator is an iterator that traverses a container backward, from the last element toward the first. A reverse iterator inverts the meaning of increment (and decrement). Incrementing (++it) a reverse iterator moves the iterator to the previous element; derementing (--it) moves the iterator to the next element.
+//The containers, aside from forward_list, all have reverse iterators. We obtain a reverse iterator by calling the rbegin, rend, crbegin, and crend members. These members return reverse iterators to the last element in the container and one “past” (i.e., one before) the beginning of the container. As with ordinary iterators, there are both const and nonconst reverse iterators.
+//Although it may seem confusing to have the meaning of the increment and decrement operators reversed, doing so lets us use the algorithms transparently to process a container forward or backward. For example, we can sort our vector in descending order by passing sort a pair of reverse iterators:
+sort(vec.begin(), vec.end()); // sorts vec in ''normal'' order
+// sorts in reverse: puts the smallest element at the end of vec
+sort(vec.rbegin(), vec.rend());
 
+//Reverse Iterators Require Decrement Operators
+//Not surprisingly, we can define a reverse iterator only from an iterator that supports -- as well as ++. After all, the purpose of a reverse iterator is to move the iterator backward through the sequence. Aside from forward_list, the iterators on the standard containers all support decrement as well as increment. However, the stream iterators do not, because it is not possible to move backward through a stream. Therefore, it is not possible to create a reverse iterator from a forward_list or a stream iterator.
 
+//Relationship between Reverse Iterators and Other Iterators
+//Technically speaking, the relationship between normal and reverse iterators accommodates the properties of a left-inclusive range. The point is that [line.crbegin(), rcomma) and [rcomma.base(), line.cend()) refer to the same elements in line. In order for that to happen, rcomma and rcomma.base() must yield adjacent positions, rather than the same position, as must crbegin() and cend().
 
+//Note: The fact that reverse iterators are intended to represent ranges and that these ranges are asymmetric has an important consequence: When we initialize or assign a reverse iterator from a plain iterator, the resulting iterator does not refer to the same element as the original.
 
+//10.5 Structure of Generic Algorithms
 
+//The most fundamental property of any algorithm is the list of operations it requires from its iterator(s). Some algorithms, such as find, require only the ability to access an element through the iterator, to increment the iterator, and to compare two iterators for equality. Others, such as sort, require the ability to read, write, and randomly access elements. The iterator operations required by the algorithms are grouped into five iterator categories listed in Table below. Each algorithm specifies what kind of iterator must be supplied for each of its iterator parameters.
 
+//Iterator Categories
+Input iterator;    //Read, but not write; single-pass, increment only;
+Output iterator;    //Write, but not read; single-pass, increment only;
+Forward iterator;    //Read and Write; multi-pass, increment only;
+Bidirectional iterator;    //Read and write; multi-pass, increment and decrement;
+Random-access iterator;    //Read and write; multi-pass, full iterator arithmetic;
 
+//A second way is to classify the algorithms (as we did in the beginning of this chapter) is by whether they read, write, or reorder the elements in the sequence. Appendix A covers all the algorithms according to this classification.
+//The algorithms also share a set of parameter-passing conventions and a set of naming conventions, which we shall cover after looking at iterator categories.
 
+//10.5.1 The Five Iterator Categories
 
+//Like the containers, iterators define a common set of operations. Some operations are provided by all iterators; other operations are supported by only specific kinds of iterators. For example, ostream_iterators have only increment, dereference, and assignment. Iterators on vector, strings, and deques support these operations and the decrement, relational, and arithmetic operators.
+//Iterators are categorized by the operations they provide and the categories form a sort of hierarchy. With the exception of output iterators, an iterator of a higher category provides all the operations of the iterators of a lower categories.
+//The standard specifies the minimum category for each iterator parameter of the generic and numeric algorithms. For example, find—which implements a one-pass, read-only traversal over a sequence—minimally requires an input iterator. The replace function requires a pair of iterators that are at least forward iterators. Similarly, replace_copy requires forward iterators for its first two iterators. Its third iterator, which represents a destination, must be at least an output iterator, and so on. For each parameter, the iterator must be at least as powerful as the stipulated minimum. Passing an iterator of a lesser power is an error.
+//Warning: Many compilers will not complain when we pass the wrong category of iterator to an algorithm.
 
+//The Iterator Categories
+//Input iterators: can read elements in a sequence. An input iterator must provide
+//• Equality and inequality operators (==, !=) to compare two iterators
+//• Prefix and postfix increment (++) to advance the iterator
+//• Dereference operator (*) to read an element; dereference may appear only on the right-hand side of an assignment
+//• The arrow operator (->) as a synonym for (* it).member—that is, dereference the iterator and fetch a member from the underlying object
+//Input iterators may be used only sequentially. We are guaranteed that *it++ is valid, but incrementing an input iterator may invalidate all other iterators into the stream. As a result, there is no guarantee that we can save the state of an input iterator and examine an element through that saved iterator. Input iterators, therefore, may be used only for single-pass algorithms. The find and accumulate algorithms require input iterators; istream_iterators are input iterators.
+
+//Output iterators: can be thought of as having complementary functionality to input iterators; they write rather than read elements. Output iterators must provide
+//• Prefix and postfix increment (++) to advance the iterator
+//• Dereference (*), which may appear only as the left-hand side of an assignment (Assigning to a dereferenced output iterator writes to the underlying element.)
+//We may assign to a given value of an output iterator only once. Like input iterators, output iterators may be used only for single-pass algorithms. Iterators used as a destination are typically output iterators. For example, the third parameter to copy is an output iterator. The ostream_iterator type is an output iterator.
+
+//Forward iterators: can read and write a given sequence. They move in only one direction through the sequence. Forward iterators support all the operations of both input iterators and output iterators. Moreover, they can read or write the same element multiple times. Therefore, we can use the saved state of a forward iterator. Hence, algorithms that use forward iterators may make multiple passes through the sequence. The replace algorithm requires a forward iterator; iterators on forward_list are forward iterators.
+
+//Bidirectional iterators: can read and write a sequence forward or backward. In addition to supporting all the operations of a forward iterator, a bidirectional iterator also supports the prefix and postfix decrement (--) operators. The reverse algorithm requires bidirectional iterators, and aside from forward_list, the library containers supply iterators that meet the requirements for a bidirectional iterator.
+
+//Random-access iterators: provide constant-time access to any position in the sequence. These iterators support all the functionality of bidirectional iterators. In addition, random-access iterators support the operations from Table 3.7 (p. 111):
+//• The relational operators (<, <=, >, and >=) to compare the relative positions of two iterators.
+//• Addition and subtraction operators (+, +=, -, and -=) on an iterator and an integral value. The result is the iterator advanced (or retreated) the integral number of elements within the sequence.
+//• The subtraction operator (-) when applied to two iterators, which yields the distance between two iterators.
+//• The subscript operator (iter[n]) as a synonym for * (iter + n).
+//The sort algorithms require random-access iterators. Iterators for array, deque, string, and vector are random-access iterators, as are pointers when used to access elements of a built-in array.
+
+//10.5.2 Algorithm Parameter Patterns
+
+//Superimposed on any other classification of the algorithms is a set of parameter conventions. Understanding these parameter conventions can aid in learning new algorithms—by knowing what the parameters mean, you can concentrate on understanding the operation the algorithm performs. Most of the algorithms have one of the following four forms:
+alg(beg, end, other args);
+alg(beg, end, dest, other args);
+alg(beg, end, beg2, other args);
+alg(beg, end, beg2, end2, other args);
+//where alg is the name of the algorithm, and beg and end denote the input range on which the algorithm operates. Although nearly all algorithms take an input range, the presence of the other parameters depends on the work being performed. The common ones listed here—dest, beg2, and end2—are all iterators. When used, these iterators fill similar roles. In addition to these iterator parameters, some algorithms take additional, noniterator parameters that are algorithm specific.
+
+//Algorithms with a Single Destination Iterator
+//A dest parameter is an iterator that denotes a destination in which the algorithm can write its output. Algorithms assume that it is safe to write as many elements as needed.
+//Warning: Algorithms that write to an output iterator assume the destination is large enough to hold the output.
+//If dest is an iterator that refers directly to a container, then the algorithm writes its output to existing elements within the container. More commonly, dest is bound to an insert iterator or an ostream_iterator. An insert iterator adds new elements to the container, thereby ensuring that there is enough space. An ostream_iterator writes to an output stream, again presenting no problem regardless of how many elements are written.
+
+//Algorithms with a Second Input Sequence
+//Algorithms that take either beg2 alone or beg2 and end2 use those iterators to denote a second input range. These algorithms typically use the elements from the second range in combination with the input range to perform a computation. When an algorithm takes both beg2 and end2, these iterators denote a second range. Such algorithms take two completely specified ranges: the input range denoted by [beg, end), and a second input range denoted by [beg2, end2).
+//Algorithms that take only beg2 (and not end2) treat beg2 as the first element in a second input range. The end of this range is not specified. Instead, these algorithms assume that the range starting at beg2 is at least as large as the one denoted by beg, end.
+//Warning: Algorithms that take beg2 alone assume that the sequence beginning at beg2 is as large as the range denoted by beg and end.
+
+//10.5.3 Algorithm Naming Conventions
+
+//Separate from the parameter conventions, the algorithms also conform to a set of naming and overload conventions. These conventions deal with how we supply an operation to use in place of the default < or == operator and with whether the algorithm writes to its input sequence or to a separate destination.
+
+//Some Algorithms Use Overloading to Pass a Predicate
+//Algorithms that take a predicate to use in place of the < or == operator, and that do not take other arguments, typically are overloaded. One version of the function uses the element type’s operator to compare elements; the second takes an extra parameter that is a predicate to use in place of < or ==:
+unique(beg, end); // uses the == operator to compare the elements
+unique(beg, end, comp); // uses comp to compare the elements
+//Both calls reorder the given sequence by removing adjacent duplicated elements. The first uses the element type’s == operator to check for duplicates; the second calls comp to decide whether two elements are equal. Because the two versions of the function differ as to the number of arguments, there is no possible ambiguity as to which function is being called.
+
+//Algorithms with _if Versions
+//Algorithms that take an element value typically have a second named (not overloaded) version that takes a predicate (§ 10.3.1, p. 386) in place of the value. The algorithms that take a predicate have the suffix _if appended:
+find(beg, end, val); // find the first instance of val in the input range
+find_if(beg, end, pred); // find the first instance for which pred is true
+//These algorithms both find the first instance of a specific element in the input range. The find algorithm looks for a specific value; the find_if algorithm looks for a value for which pred returns a nonzero value.
+//These algorithms provide a named version rather than an overloaded one because both versions of the algorithm take the same number of arguments. Overloading ambiguities would therefore be possible, albeit rare. To avoid any possible ambiguities, the library provides separate named versions for these algorithms.
+
+//Distinguishing Versions That Copy from Those That Do Not
+//By default, algorithms that rearrange elements write the rearranged elements back into the given input range. These algorithms provide a second version that writes to a specified output destination. As we’ve seen, algorithms that write to a destination append _copy to their names:
+reverse(beg, end); // reverse the elements in the input range
+reverse_copy(beg, end, dest);// copy elements in reverse order into dest
+//Some algorithms provide both _copy and _if versions. These versions take a destination iterator and a predicate:
+// removes the odd elements from v1
+remove_if(v1.begin(), v1.end(),
+[](int i) { return i % 2; });
+// copies only the even elements from v1 into v2; v1 is unchanged
+remove_copy_if(v1.begin(), v1.end(), back_inserter(v2),
+[](int i) { return i % 2; });
+//Both calls use a lambda to determine whether an element is odd. In the first case, we remove the odd elements from the input sequence itself. In the second, we copy the non-odd (aka even) elements from the input range into v2.
+
+//10.6 Container-Specific Algorithms
+
+//Unlike the other containers, list and forward_list define several algorithms as members. In particular, the list types define their own versions of sort, merge, remove, reverse, and unique. The generic version of sort requires randomaccess iterators. As a result, sort cannot be used with list and forward_list because these types offer bidirectional and forward iterators, respectively.
+//The generic versions of the other algorithms that the list types define can be used with lists, but at a cost in performance. These algorithms swap elements in the input sequence. A list can “swap” its elements by changing the links among its elements rather than swapping the values of those elements. As a result, the list-specific versions of these algorithms can achieve much better performance than the corresponding generic versions.
+//These list-specific operations are described in Table below. Generic algorithms not listed in the table that take appropriate iterators execute equally efficiently on lists and forward_listss as on other containers.
+
+//Algorithms that are Members of list and forward_list
+//These operations return void
+lst.merge(lst2);    //Merge elements from lst2 ont lst. Both lst and lst2 must be sorted. Elements are removed from lst2. After the merge, lst2 is empty. The first version uses the < operator; the second version uses the given comparison operation;
+lst.merge(lst2, comp);
+lst.remove(val);    //Calls erase to remove each element that is == to the given value or for which the given unary predicate succeeds;
+lst.remove_if(pred);
+lst.reverse();    //Reverse the order of the elements in lst;
+lst.sort();    //Sorts the element of lst using < or the given comparison operations;
+lst.sort(comp);
+lst.unique();    //Calls erase to remove consecutive copies of the same value. The first version uses ==; the second uses the given binary predicates;
+lst.unique(pred);
+//Best Practices: The list member versions should be used in preference to the generic algorithms for lists and forward_lists.
+
+//The splice Members
+//The list types also define a splice algorithm, which is described in Table below. This algorithm is particular to list data structures. Hence a generic version of this algorithm is not needed.
+//Arguments to the list and forward_list splice Members
+//lst.splice(args) or flst.splice_after(args)
+(p, lst2);    //p is an iterator to an element in lst or an iterator just before an element in flst. Moves all the element(s) from lst2 into lst just before p or into flst just after p. Removes the element(s) from lst2. lst2 must have the same type as lst or flst and may not be the same list;
+(p, lst2, p2);    //p2 is a valid iterator into lst2. Moves the element denoted by p2 into lst or moves the element just after p2 into flst. lst2 can be the same list as lst or flst;
+(p, lst2, b, e);    //b and e must denote a valid range in lst2. Moves the elements in the given range from lst2. lst2 and lst (or flst) can be the same list but p must not denote an element in the given range;
+
+//The List-Specific Operations Do Change the Containers
+//Most of the list-specific algorithms are similar—but not identical—to their generic counterparts. However, a crucially important difference between the list-specific and the generic versions is that the list versions change the underlying container. For example, the list version of remove removes the indicated elements. The list version of unique removes the second and subsequent duplicate elements.
+//Similarly, merge and splice are destructive on their arguments. For example, the generic version of merge writes the merged sequence to a given destination iterator; the two input sequences are unchanged. The list merge function destroys the given list—elements are removed from the argument list as they are merged into the object on which merge was called. After a merge, the elements from both lists continue to exist, but they are all elements of the same list.
