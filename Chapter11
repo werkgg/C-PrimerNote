@@ -274,17 +274,137 @@ else cout << "oops: " << removal_word << " not found!\n";
 auto cnt = authors.erase("Barth, John");
 //If authors is the multimap we created in § 11.3.2 (p. 434), then cnt will be 2.
 
+//11.3.4 Subscripting a map
+//The map and unordered_map containers provide the subscript operator and a corresponding at function, which are described in Table below. The set types do not support subscripting because there is no “value” associated with a key in a set. The elements are themselves keys, so the operation of “fetching the value associated with a key” is meaningless. We cannot subscript a multimap or an unordered_multimap because there may be more than one value associated with a given key.
+//Subscript Operation for map and unordered_map
+c[k];    //Returns the element with key k; if k is not in c, adds a new, value-initialized element with key k;
+c.at(k);    //Checked access to the element with key k, throws an out_of_range exception if k is not in c;
+//Like the other subscript operators we’ve used, the map subscript takes an index (that is, a key) and fetches the value associated with that key. However, unlike other subscript operators, if the key is not already present, a new element is created and inserted into the map for that key. The associated value is value initialized.
+//For example, when we write
+map <string, size_t> word_count; // empty map
+// insert a value-initialized element with key Anna; then assign 1 to its value
+word_count["Anna"] = 1;
+//the following steps take place:
+//• word_count is searched for the element whose key is Anna. The element is not found.
+//• A new key-value pair is inserted into word_count. The key is a const string holding Anna. The value is value initialized, meaning in this case that the value is 0.
+//• The newly inserted element is fetched and is given the value 1. Because the subscript operator might insert an element, we may use subscript only on a map that is not const.
+//Note: Subscripting a map behaves quite differently from subscripting an array or vector: Using a key that is not already present adds an element with that key to the map.
 
+//Using the Value Returned from a Subscript Operation
+//Another way in which the map subscript differs from other subscript operators we’ve used is its return type. Ordinarily, the type returned by dereferencing an iterator and the type returned by the subscript operator are the same. Not so for maps: when we subscript a map, we get a mapped_type object; when we dereference a map iterator, we get a value_type object.
+//In common with other subscripts, the map subscript operator returns an lvalue. Because the return is an lvalue, we can read or write the element:
+cout << word_count["Anna"]; // fetch the element indexed by Anna; prints 1
+++word_count["Anna"]; // fetch the element and add 1 to it
+cout << word_count["Anna"]; // fetch the element and print it; prints 2
+//Note: Unlike vector or string, the type returned by the map subscript operator differs from the type obtained by dereferencing a map iterator.
+//The fact that the subscript operator adds an element if it is not already in the map allows us to write surprisingly succinct programs such as the loop inside our wordcounting program. On the other hand, sometimes we only want to know whether an element is present and do not want to add the element if it is not. In such cases, we must not use the subscript operator.
 
+//11.3.5 Accessing Elements
+//The associative containers provide various ways to find a given element, which are described in Table below. Which operation to use depends on what problem we are trying to solve. If all we care about is whether a particular element is in the container, it is probably best to use find. For the containers that can hold only unique keys, it probably doesn’t matter whether we use find or count. However, for the containers with multiple keys, count has to do more work: If the element is present, it still has to count how many elements have the same key. If we don’t need the count, it’s best to use find:
+//Operations to Find Elements in an Associative Container
+//lower_bound and upper_bound not valid for the unordered containers. Subscript and at operations only for map and unordered_map that are not const.
+c.find(k);    //Returns an iterator to the (first) element with key k, or the off-the-end iterator if k is not in the container;
+c.count(k);    //Returns the number of elements with key k. For the containers with unique keys, the result is always zero or one;
+c.lower_bound(k);    //Returns an iterator to the first element with key not less than k;
+c.upper_bound(k);    //Returns an iterator to the first element with key greater than k;
+c.equal_range(k);    //Returns a pair of iterators denoting the element with key k. If k is not present, both members are c.end();
 
+//Using find Instead of Subscript for maps
+//For the map and unordered_map types, the subscript operator provides the simplest method of retrieving a value. However, as we’ve just seen, using a subscript has an important side effect: If that key is not already in the map, then subscript inserts an element with that key. Whether this behavior is correct depends on our expectations.
+//Sometimes, we want to know if an element with a given key is present without changing the map. We cannot use the subscript operator to determine whether an element is present, because the subscript operator inserts a new element if the key is not already there. In such cases, we should use find.
 
+//Finding Elements in a multimap or multiset
+//Finding an element in an associative container that requires unique keys is a simple matter—the element is or is not in the container. For the containers that allow multiple keys, the process is more complicated: There may be many elements with the given key. When a multimap or multiset has multiple elements of a given key, those elements will be adjacent within the container.
+//For example, given our map from author to titles, we might want to print all the books by a particular author. We can solve this problem in three different ways. The most obvious way uses find and count:
+string search_item("Alain de Botton"); // author we'll look for
+auto entries = authors.count(search_item); // number of elements
+auto iter = authors.find(search_item); // first entry for this author
+// loop through the number of entries there are for this author
+while(entries) {
+	cout << iter->second << endl; // print each title
+	++iter; // advance to the next title
+	--entries; // keep track of how many we've printed
+}
+//We start by determining how many entries there are for the author by calling count and getting an iterator to the first element with this key by calling find. The number of iterations of the for loop depends on the number returned from count. In particular, if the count was zero, then the loop is never executed.
+//Note: We are guaranteed that iterating across a multimap or multiset returns all the elements with a given key in sequence.
 
+//A Different, Iterator-Oriented Solution
+//Alternatively, we can solve our problem using lower_bound and upper_bound. Each of these operations take a key and returns an iterator. If the key is in the container, the iterator returned from lower_bound will refer to the first instance of that key and the iterator returned by upper_bound will refer just after the last instance of the key. If the element is not in the multimap, then lower_bound and upper_bound will return equal iterators; both will refer to the point at which the key can be inserted without disrupting the order. Thus, calling lower_bound and upper_bound on the same key yields an iterator range that denotes all the elements with that key.
+//Of course, the iterator returned from these operations might be the off-the-end iterator for the container itself. If the element we’re looking for has the largest key in the container, then upper_bound on that key returns the off-the-end iterator. If the key is not present and is larger than any key in the container, then the return from lower_bound will also be the off-the-end iterator.
 
+//Note: The iterator returned from lower_bound may or may not refer to an element with the given key. If the key is not in the container, then lower_bound refers to the first point at which this key can be inserted while preserving the element order within the container.
 
+//Using these operations, we can rewrite our program as follows:
+// definitions of authors and search_item as above
+// beg and end denote the range of elements for this author
+for (auto beg = authors.lower_bound(search_item), end = authors.upper_bound(search_item); beg != end; ++beg)
+	cout << beg->second << endl; // print each title
+//This program does the same work as the previous one that used count and find but accomplishes its task more directly. The call to lower_bound positions beg so that it refers to the first element matching search_item if there is one. If there is no such element, then beg refers to the first element with a key larger than search_item, which could be the off-the-end iterator. The call to upper_bound sets end to refer to the element just beyond the last element with the given key. These operations say nothing about whether the key is present. The important point is that the return values act like an iterator range.
+//If there is no element for this key, then lower_bound and upper_bound will be equal. Both will refer to the point at which this key can be inserted while maintaining the container order.
+//Assuming there are elements with this key, beg will refer to the first such element. We can increment beg to traverse the elements with this key. The iterator in end will signal when we’ve seen all the elements. When beg equals end, we have seen every element with this key.
+//Because these iterators form a range, we can use a for loop to traverse that range. The loop is executed zero or more times and prints the entries, if any, for the given author. If there are no elements, then beg and end are equal and the loop is never executed. Otherwise, we know that the increment to beg will eventually reach end and that in the process we will print each record associated with this author.
 
+//Note: If lower_bound and Upper_bound return the same iterator, then the given key is not in the container.
 
+//The equal_range Function
+//The remaining way to solve this problem is the most direct of the three approaches: Instead of calling upper_bound and lower_bound, we can call equal_range. This function takes a key and returns a pair of iterators. If the key is present, then the first iterator refers to the first instance of the key and the second iterator refers one past the last instance of the key. If no matching element is found, then both the first and second iterators refer to the position where this key can be inserted.
+//We can use equal_range to modify our program once again:
+// definitions of authors and search_item as above pos holds iterators that denote the range of elements for this key
+for (auto pos = authors.equal_range(search_item); pos.first != pos.second; ++pos.first)
+	cout<<pos.first->second<<endl;    //print each title
+//This program is essentially identical to the previous one that used upper_bound and lower_bound. Instead of using local variables, beg and end, to hold the iterator range, we use the pair returned by equal_range. The first member of that pair holds the same iterator as lower_bound would have returned and second holds the iterator upper_bound would have returned. Thus, in this program pos.first is equivalent to beg, and pos.second is equivalent to end.
 
+//11.3.6 A Word Transformation Map
 
+//We’ll close this section with a program to illustrate creating, searching, and iterating across a map. We’ll write a program that, given one string, transforms it into another. The input to our program is two files. The first file contains rules that we will use to transform the text in the second file. Each rule consists of a word that might be in the input file and a phrase to use in its place. The idea is that whenever the first word appears in the input, we will replace it with the corresponding phrase. The second file contains the text to transform.
 
+//11.4 The Unordered Containers
 
+//The new standard defines four unordered associative containers. Rather than using a comparison operation to organize their elements, these containers use a hash function and the key type's == operator. An unordered container is most useful when we have a key type for which there is no obvious ordering relationship among the elements. These containers are also useful for applications in which the cost of maintaining the elements in order is prohibitive.
+//Although hashing gives better average case performance in principle, achieving good results in practice often requires a fair bit of performance testing and tweaking. As a result, it is usually easier (and often yields better performance) to use an ordered container.
+//Tip: Use an unordered container if the key type is inherently unordered or if performance testing reveals problems that hashing might solve.
 
+//Using an Unordered Container
+//Aside from operations that manage the hashing, the unordered containers provide the same operations (find, insert, and so on) as the ordered containers. That means that the operations we’ve used on map and set apply to unordered_map and unordered_set as well. Similarly for the unordered versions of the containers that allow multiple keys.
+//As a result, we can usually use an unordered container in place of the corresponding ordered container, and vice versa. However, because the elements are not stored in order, the output of a program that uses an unordered container will (ordinarily) differ from the same program using an ordered container.
+
+//Managing the Buckets
+//The unordered containers are organized as a collection of buckets, each of which holds zero or more elements. These containers use a hash function to map elements to buckets. To access an element, the container first computes the element’s hash code, which tells which bucket to search. The container puts all of its elements with a given hash value into the same bucket. If the container allows multiple elements with a given key, all the elements with the same key will be in the same bucket. As a result, the performance of an unordered container depends on the quality of its hash function and on the number and size of its buckets.
+//The hash function must always yield the same result when called with the same argument. Ideally, the hash function also maps each particular value to a unique bucket. However, a hash function is allowed to map elements with differing keys to the same bucket. When a bucket holds several elements, those elements are searched sequentially to find the one we want. Typically, computing an element’s hash code and finding its bucket is a fast operation. However, if the bucket has many elements, many comparisons may be needed to find a particular element.
+//The unordered containers provide a set of functions, listed in Table below, that let us manage the buckets. These members let us inquire about the state of the container and force the container to reorganize itself as needed.
+//Unordered Container Management Operations
+//Bucket Interface
+c.bucket_count();    //Number of buckets in use;
+c.max_bucket_count();    //Largest number of buckets this container can hold;
+c.bucket_size(n);    //Number of elements in the nth bucket;
+c.bucket(k);    //Bucket in which elements with key k would be found;
+//Bucket Iteration
+local_iterator;    //Iterator type that can access elements in a bucket;
+const_local_iterator;    //const version of the bucket iterator;
+c.begin(n), c.end(n);    //Iterator to the first, one past the last element in bucket n;
+c.cbegin(n), c.cend(n);    //Returns const_local_iterator;
+//Hash Policy
+c.load_factor();    //Average number of elements per bucket. Returns float;
+c.max_load_factor();    //Average bucket size that c tries to maintain. c adds buckets to keep load_fafctor <= max_load_factor. Returns float;
+c.rehash(n);    //Reorganize storage so that bucket_count >= n and bucket_count > size/max_load_factor;
+c.reserve(n);    //Reorganize so that c can hold n elements without a rehash;
+
+//Requirements on Key Type for Unordered Container
+//By default, the unordered containers use the == operator on the key type to compare elements. They also use an object of type hash<key_type> to generate the hash code for each element. The library supplies versions of the hash template for the builtin types, including pointers. It also defines hash for some of the library types, including strings and the smart pointer types that we will describe in Chapter 12. Thus, we can directly define unordered containers whose key is one of the built-in types (including pointer types), or a string, or a smart pointer.
+//However, we cannot directly define an unordered container that uses a our own class types for its key type. Unlike the containers, we cannot use the hash template directly. Instead, we must supply our own version of the hash template. We’ll see how to do so in § 16.5 (p. 709).
+//Instead of using the default hash, we can use a strategy similar to the one we used to override the default comparison operation on keys for the ordered containers. To use Sales_data as the key, we’ll need to supply functions to replace both the == operator and to calculate a hash code. We’ll start by defining these functions:
+size_t hasher(const Sales_data &sd) {
+	return hash<string>()(sd.isbn());
+}
+bool eqOp(const Sales_data &lhs, const Sales_data &rhs) {
+	return lhs.isbn() == rhs.isbn();
+}
+//Our hasher function uses an object of the library hash of string type to generate a hash code from the ISBN member. Similarly, the eqOp funciton compares two Sales_data objects by comparing their ISBNs.
+//We can use these functions to define an unordered_multiset as follows
+using SD_multiset = unordered_multiset<Sales_data, decltype(hasher)*, decltype(eqOp)*>;
+// arguments are the bucket size and pointers to the hash function and equality operator
+SD_multiset bookstore(42, hasher, eqOp);
+//To simplify the declaration of bookstore we first define a type alias for an unordered_multiset whose hash and equality operations have the same  types as our hasher and eqOp functions. Using that type, we define bookstore passing pointers to the functions we want bookstore to use.
+//If our class has its own == operator we can override just the hash function:
+// use FooHash to generate the hash code; Foo must have an == operator
+unordered_set<Foo, decltype(FooHash)*> fooSet(10, FooHash);
