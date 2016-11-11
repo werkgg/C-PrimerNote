@@ -732,6 +732,44 @@ Bulk_quote(const std::string& book, double price, std::size_t qty, double disc) 
 //The second exception is that the default, copy, and move constructors are not inherited. These constructors are synthesized using the normal rules. An inherited constructor is not treated as a user-defined constructor. Therefore, a class that contains only inherited constructors will have a synthesized default constructor.
 
 //15.8 Containers and Inheritance
+//When we use a container to store objects from an inheritance hierarchy, we generally must store those objects indirectly. We cannot put objects of types related by inheritance directly into a container, because there is no way to define a container that holds elements of differing types.
+//As an example, assume we want to define a vector to hold several books that a customer wants to buy. It should be easy to see that we can’t use a vector that holds Bulk_quote objects. We can’t convert Quote objects to Bulk_quote, so we wouldn’t be able to put Quote objects into that vector.
+//It may be somewhat less obvious that we also can’t use a vector that holds objects of type Quote. In this case, we can put Bulk_quote objects into the container. However, those objects would no longer be Bulk_quote objects:
+vector<Quote> basket;
+basket.push_back(Quote("0-201-82470-1", 50));
+// ok, but copies only the Quote part of the object into basket
+basket.push_back(Bulk_quote("0-201-54848-8", 50, 10, .25));
+// calls version defined by Quote, prints 750, i.e., 15 * $50
+cout << basket.back().net_price(15) << endl;
+//The elements in basket are Quote objects. When we add a Bulk_quote object to the vector its derived part is ignored.
+//Warning: Because derived objects are “sliced down” when assigned to a base-type object, containers and types related by inheritance do not mix well.
+
+//Put (Smart) Pointers, Not Objects, in Containers
+//When we need a container that holds objects related by inheritance, we typically define the container to hold pointers (preferably smart pointers) to the base class. As usual, the dynamic type of the object to which those pointers point might be the base-class type or a type derived from that base:
+vector<shared_ptr<Quote>> basket;
+basket.push_back(make_shared<Quote>("0-201-82470-1", 50));
+basket.push_back(make_shared<Bulk_quote>("0-201-54848-8", 50, 10, .25));
+// calls the version defined by Quote; prints 562.5, i.e., 15 * $50 less the discount
+cout << basket.back()->net_price(15) << endl;
+//Because basket holds shared_ptrs, we must dereference the value returned by basket.back() to get the object on which to run net_price. We do so by using -> in the call to net_price. As usual, the version of net_price that is called depends on the dynamic type of the object to which that pointer points.
+//It is worth noting that we defined basket as shared_ptr<Quote>, yet in the second push_back we passed a shared_ptr to a Bulk_quote object. Just as we can convert an ordinary pointer to a derived type to a pointer to an base-class type (§15.2.2, p. 597), we can also convert a smart pointer to a derived type to a smart pointer to an base-class type. Thus, make_shared<Bulk_quote> returns a shared_ptr<Bulk_quote> object, which is converted to shared_ptr<Quote> when we call push_back. As a result, despite appearances, all of the elements of basket have the same type.
+
+//15.8.1 Writing a Basket Class
+
+//15.9 
+//Key Concept: Inheritance versus Composition
+//The design of inheritance hierarchies is a complicated topic in its own right and well beyond the scope of this language Primer. However, there is one important design guide that is so fundamental that every programmer should be familiar with it.
+//When we define a class as publicly inherited from another, the derived class should reflect an “Is A” relationship to the base class. In well-designed class hierarchies, objects of a publicly derived class can be used wherever an object of the base class is expected.
+//Another common relationship among types is a “Has A” relationship. Types related by a “Has A” relationship imply membership.
+//In our bookstore example, our base class represents the concept of a quote for a book sold at a stipulated price. Our Bulk_quote “is a” kind of quote, but one with a different pricing strategy. Our bookstore classes “have a” price and an ISBN.
+
+//When new to object-oriented programming, it is often the case that the hardest part in understanding a program is understanding the design. Once you are thoroughly comfortable with the design, the implementation flows naturally. 
+
+
+
+
+
+
 
 
 
