@@ -1,1 +1,96 @@
+//Chapter 16 Templates and Generic Programming
+
+//Both object-oriented programming (OOP) and generic programming deal with types that are not known at the time the program is written. The distinction between the two is that OOP deals with types that are not known until run time, whereas in generic programming the types become known during compilation.
+//The containers, iterators, and algorithms described in PartII are all examples of generic programming. When we write a generic program, we write the code in a way that is independent of any particular type. When we use a generic program, we supply the types or values on which that instance of the program will operate.
+//For example, the library provides a single, generic definition of each container, such as vector. We can use that generic definition to define many different types of vectors, each of which differs from the others as to the type of elements the vector contains.
+//Templates are the foundation of generic programming. We can use and have used templates without understanding how they are defined. In this chapter we’ll see how to define our own templates.
+//Templates are the foundation for generic programming in C++. A template is a blueprint or formula for creating classes or functions. When we use a generic type, such as vector, or a generic function, such as find, we supply the information needed to transform that blueprint into a specific class or function. That transformation happens during compilation. In Chapter 3 and Part II we learned how to use templates. In this chapter we’ll learn how to define them.
+
+//16.1 Defining a Template
+//Imagine that we want to write a function to compare two values and indicate whether the first is less than, equal to, or greater than the second. In practice, we’d want to define several such functions, each of which will compare values of a given type. Our first attempt might be to define several overloaded functions:
+// returns 0 if the values are equal, -1 if v1 is smaller, 1 if v2 is smaller
+int compare(const string &v1, const string &v2) {
+	if (v1 < v2) return -1;
+	if (v2 < v1) return 1;
+	return 0;
+}
+int compare(const double &v1, const double &v2) {
+	if (v1 < v2) return -1;
+	if (v2 < v1) return 1;
+	return 0;
+}
+//These functions are nearly identical: The only difference between them is the type of their parameters. The function body is the same in each function.
+//Having to repeat the body of the function for each type that we compare is tedious and error-prone. More importantly, we need to know when we write the program all the types that we might ever want to compare. This strategy cannot work if we want to be able to use the function on types that our users might supply.
+
+//16.1.1 Function Templates
+//Rather than defining a new function for each type, we can define a function template. A function template is a formula from which we can generate type-specific versions of that function. The template version of compare looks like
+template <typename T>
+int compare (const T &v1, const T &v2) {
+	if (v1 < v2) return -1;
+	if (v2 < v1) return 1;
+	return 0;
+}
+//A template definition starts with the keyword template followed by a template parameter list, which is a comma-separated list of one or more template parameters bracketed by the less-than (<) and greater-than (>) tokens.
+//Note: In a template definition, the template parameter list cannot be empty.
+//The template parameter list acts much like a function parameter list. A function parameter list defines local variable(s) of a specified type but does not say how to initialize them. At run time, arguments are supplied that initialize the parameters.
+//Analogously, template parameters represent types or values used in the definition of a class or function. When we use a template, we specify—either implicitly or explicitly —template argument(s) to bind to the template parameter(s).
+//Our compare function declares one type parameter named T. Inside compare, we use the name T to refer to a type. Which actual type T represents is determined at compile time based on how compare is used.
+
+//Instantiating a Function Template
+//When we call a function template, the compiler (ordinarily) uses the arguments of the call to deduce the template argument(s) for us. That is, when we call compare, the compiler uses the type of the arguments to determine what type to bind to the template parameter T. For example, in this call
+cout << compare(1, 0) << endl; // T is int
+//the arguments have type int. The compiler will deduce int as the template argument and will bind that argument to the template parameter T.
+//The compiler uses the deduced template parameter(s) to instantiate a specific version of the function for us. When the compiler instantiates a template, it creates a new “instance” of the template using the actual template argument(s) in place of the corresponding template parameter(s). For example, given the calls
+// instantiates int compare(const int&, const int&)
+cout << compare(1, 0) << endl; // T is int
+// instantiates int compare(const vector<int>&, const vector<int>&)
+vector<int> vec1{1, 2, 3}, vec2{4, 5, 6};
+cout << compare(vec1, vec2) << endl; // T is vector<int>
+//the compiler will instantiate two different versions of compare. For the first call, the compiler will write and compile a version of compare with T replaced by int:
+int compare(const int &v1, const int &v2) {
+	if (v1 < v2) return -1;
+	if (v2 < v1) return 1;
+	return 0;
+}
+//For the second call, it will generate a version of compare with T replaced by vector<int>. These compiler-generated functions are generally referred to as an instantiation of the template.
+
+//Template Type Parameters
+//Our compare function has one template type parameter. In general, we can use a type parameter as a type specifier in the same way that we use a built-in or class type specifier. In particular, a type parameter can be used to name the return type or a function parameter type, and for variable declarations or casts inside the function body:
+// ok: same type used for the return type and parameter
+template <typename T> T foo(T* p) {
+	T tmp = *p; // tmp will have the type to which p points
+	// ...
+	return tmp;
+}
+//Each type parameter must be preceded by the keyword class or typename:
+// error: must precede U with either typename or class
+template <typename T, U> T calc(const T&, const U&);
+//These keywords have the same meaning and can be used interchangeably inside a template parameter list. A template parameter list can use both keywords:
+// ok: no distinction between typename and class in a template parameter list
+template <typename T, class U> calc (const T&, const U&);
+//It may seem more intuitive to use the keyword typename rather than class to designate a template type parameter. After all, we can use built-in (nonclass) types as a template type argument. Moreover, typename more clearly indicates that the name that follows is a type name. However, typename was added to C++ after templates were already in widespread use; some programmers continue to use class exclusively.
+
+//Nontype Template Parameters
+//In addition to defining type parameters, we can define templates that take nontype parameters. A nontype parameter represents a value rather than a type. Nontype parameters are specified by using a specific type name instead of the class or typename keyword.
+//When the template is instantiated, nontype parameters are replaced with a value supplied by the user or deduced by the compiler. These values must be constant expressions, which allows the compiler to instantiate the templates during compile time.
+//As an example, we can write a version of compare that will handle string literals. Such literals are arrays of const char. Because we cannot copy an array, we’ll define our parameters as references to an array. Because we’d like to be able to compare literals of different lengths, we’ll give our template two nontype parameters. The first template parameter will represent the size of the first array, and the second parameter will represent the size of the second array:
+template <unsigned N, unsigned M>
+int compare (const char (&p1) [N], const char (&p2) [M])
+{
+	return strcmp(p1, p2);
+}
+//When we call this version of compare:
+compare("hi", "mom")
+//the compiler will use the size of the literals to instantiate a version of the template with the sizes substituted for N and M. Remembering that the compiler inserts a null terminator at the end of a string literal, the compiler will instantiate
+int compare (const char (&p1)[3], const char (&p2)[4])
+//A nontype parameter may be an integral type, or a pointer or (lvalue) reference to an object or to a function type. An argument bound to a nontype integral parameter must be a constant expression. Arguments bound to a pointer or reference nontype parameter must have static lifetime (Chapter 12, p. 450). We may not use an ordinary (nonstatic) local object or a dynamic object as a template argument for reference or pointer nontype template parameters. A pointer parameter can also be instantiated by nullptr or a zero-valued constant expression.
+//A template nontype parameter is a constant value inside the template definition. A nontype parameter can be used when constant expressions are required, for example, to specify the size of an array.
+//Note: Template arguments used for nontype template parameters must be constant expressions.
+
+//inline and constexpr Function Templates
+
+
+
+
+
 
