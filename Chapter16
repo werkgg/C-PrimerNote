@@ -401,6 +401,93 @@ ct = fi.count(); // uses Foo<int>::count
 ct = Foo::count(); // error: which template instantiation?
 //Like any other member function, a static member function is instantiated only if it is used in a program.
 
+//16.1.3 Template Parameters
+//Like the name of function parameters, a template parameter name has no intrinsic meaning. We ordinarily name type parameters T, but we can use any names:
+template <typename Foo> Foo calc(const Foo& a, const Foo& b) {
+	Foo tmp = a;  //tmp has the same type as the parameters and return type
+	//...
+	return tmp;
+}
+
+//Template Parameters and Scope
+//Template parameters follow normal scoping rules. The name of a template parameter can be used after it has been declared and until the end of the template declaration or definition. As with any other name, a template parameter hides any declaration of that name in an outer scope. Unlike most other contexts, however, a name used as a template parameter may not be reused within the template:
+typedef double A;
+template <typename A, typename B> void f(A a, B b) {
+	A tmp = a;  //tmp has same type as the template A, not double
+	double B;  //error redeclares template parameter B
+}
+//Normal name hiding says that the typedef of A is hidden by the type parameter named A. Thus, tmp is not a double; it has whatever type gets bound to the template parameter A when calc is used. Because we cannot reuse names of template parameters, the declaration of the variable named B is an error.
+//Because a parameter name cannot be reused, the name of a template parameter can appear only once with in a given template parameter list:
+// error: illegal reuse of template parameter name V
+template <typename V, typename V> // ...
+
+//Template Declarations
+//A template declarations must include the template parameters:
+// declares but does not define compare and Blob
+template <typename T> int compare(const T&, const T&);
+template <typename T> class Blob;
+//As with function parameters, the names of a template parameter need not be the same across the declaration(s) and the definition of the same template:
+// all three uses of calc refer to the same function template
+template <typename T> T calc(const T&, const T&); // declaration
+template <typename U> U calc(const U&, const U&); // declaration
+// definition of the template
+template <typename Type> Type calc(const Type& a, const Type& b) { /* . . . */ }
+//Of course, every declaration and the definition of a given template must have the same number and kind (i.e., type or nontype) of parameters.
+
+//Best Practice: For reasons we'll explain in § 16.3 (p. 698), declarations for all the templates needed by a given file usually should appear together at the beginning of a file before any code that uses those names.
+
+//Using Class Members that are Types
+//Recall that we use the scope operator (::) to access both static members and type members (§ 7.4, p. 282, and § 7.6, p. 301). In ordinary (nontemplate) code, the compiler has access to the class defintion. As a result, it knows whether a name accessed through the scope operator is a type or a static member. For example, when we write string::size_type, the compiler has the definition of string and can see that size_type is a type.
+//Assuming T is a template type parameter, When the compiler sees code such as T::mem it won’t know until instantiation time whether mem is a type or a static data member. However, in order to process the template, the compiler must know whether a name represents a type. For example, assuming T is the name of a type parameter, when the compiler sees a statement of the following form:
+T::size_type * p;
+//it needs to know whether we’re defining a variable named p or are multiplying a static data member named size_type by a variable named p.
+//By default, the language assumes that a name accessed through the scope operator is not a type. As a result, if we want to use a type member of a template type parameter, we must explicitly tell the compiler that the name is a type. We do so by using the keyword typename:
+template <typename T> typename T::value_type top(const T& c) {
+	if (!c.empty())
+		return c.back();
+	else
+		return typename T::value_type();
+}
+//Our top function expects a container as its argument and uses typename to specify its return type and to generate a value initialized element to return if c has no elements.
+//Note: When we want to inform the compiler that a name represents a type, we must use the keyword typename, not class.
+
+//Default Template Arguments
+//Just as we can supply default arguments to function parameters, we can also supply default template arguments. Under the new standard, we can supply default arguments for both function and class templates. Earlier versions of the language, allowed default arguments only with class templates.
+//As an example, we'll rewrite compare to use the library less function-object template by default:
+// compare has a default template argument, less<T> and a default function argument, F()
+template <typename T, typename F = less<T>>
+int compare(const T &v1, const T &v2, F f = F())
+{
+	if (f(v1, v2)) return -1;
+	if (f(v2, v1)) return 1;
+	return 0;
+}
+//Here we’ve given our template a second type parameter, named F, that represents the type of a callable object (§ 10.3.2, p. 388) and defined a new function parameter, f, that will be bound to a callable object.
+//We’ve also provided defaults for this template parameter and its corresponding function parameter. The default template argument specifies that compare will use the library less function-object class, instantiated with the same type parameter as compare. The default function argument says that f will be a default-initialized object of type F.
+//When users call this version of compare, they may supply their own comparison operation but are not required to do so:
+bool i = compare(0, 42); // uses less; i is -1
+// result depends on the isbns in item1 and item2
+Sales_data item1(cin), item2(cin);
+bool j = compare(item1, item2, compareIsbn);
+//The first call uses the default function argument, which is a default-initialized object of type less<T>. In this call, T is int so that object has type less<int>. This instantiation of compare will use less<int> to do its comparisons.
+//In the second call, we pass compareIsbn (§ 11.2.2, p. 425) and two objects of type Sales_data. When compare is called with three arguments, the type of the third argument must be a callable object that returns a type that is convertible to bool and takes arguments of a type compatible with the types of the first two arguments. As usual, the types of the template parameters are deduced from their corresponding function arguments. In this call, the type of T is deduced as Sales_data and F is deduced as the type of compareIsbn.
+//As with function default arguments, a template parameter may have a default argument only if all of the parameters to its right also have default arguments.
+
+//Template Default Arguments and Class Templates
+//Whenever we use a class template, we must always follow the template’s name with brackets. The brackets indicate that a class must be instantiated from a template. In particular, if a class template provides default arguments for all of its template parameters, and we want to use those defaults, we must put an empty bracket pair following the template’s name:
+template <class T = int> class Numbers { // by default T is int
+public:
+	Numbers(T v = 0): val(v) { }
+	// various operations on numbers
+private:
+	T val;
+};
+Numbers<long double> lots_of_precision;
+Numbers<> average_precision; // empty <> says we want the default type
+//Here we instantiate two versions of Numbers: average_precision instantiates Numbers with T replaced by int; lots_of_precision instantiates Numbers with T replaced by long double.
+
+
+
 
 
 
